@@ -8,9 +8,11 @@ Written by Luka Smyth
 """
 
 import copy
+import logging
 import ntpath
 import os
 import random
+import re
 
 import skimage.io
 import skimage.color
@@ -18,13 +20,17 @@ from keras.utils import to_categorical
 
 
 class Dataset:
-    def __init__(self):
+    def __init__(self, dataset_dir):
         self.items = []
         self.num_classes = None
+        self.num_examples = None
         self.class_names = []
         self.class_names_to_one_hot = {}
 
-    def load_dataset(self, data_dir):
+        self.dataset_dir = dataset_dir
+        self.load_dataset()
+
+    def load_dataset(self):
         """
         Load specified dataset subset
 
@@ -38,18 +44,14 @@ class Dataset:
             > class_1
             .
             etc.
-
-        Parameters
-        ----------
-        data_dir: str
-            directory containing dataset
         """
 
-        class_names = [dir for dir in os.listdir(data_dir)]
+        class_names = [directory for directory in os.listdir(self.dataset_dir)]
         self._add_classes(class_names)
+        logging.info('Loading dataset with following class names: {}'.format(self.class_names))
 
         for class_name in class_names:
-            class_dir = os.path.join(data_dir, class_name)
+            class_dir = os.path.join(self.dataset_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]
             # TODO add something to ignore files not of the correct type
             # Create a data item for each example
@@ -58,6 +60,8 @@ class Dataset:
                 data = self.load_single_example(filepath)
                 data_item = DataItem(filepath=filepath, data=data, class_name=class_name)
                 self.items.append(data_item)
+        self.num_examples = len(self.items)
+        logging.info('Finished loading dataset with {} examples'.format(len(self.items)))
 
     @staticmethod
     def load_single_example(filepath):
@@ -91,12 +95,21 @@ class Dataset:
             list of class names
         """
 
-        self.class_names = class_names
+        class_names.sort()  # sort alphabetically
+        self.class_names = [self._clean_class_name(name) for name in class_names]  # clean names
         self.num_classes = len(class_names)
 
         # Create dict mapping class name to one hot vector
         self.class_names_to_one_hot = {name: to_categorical(idx, self.num_classes)
                                        for idx, name in enumerate(class_names)}
+
+    @staticmethod
+    def _clean_class_name(class_name):
+        """ Returns cleaner version of class name"""
+        class_name = class_name.lower()
+        class_name = class_name.strip()
+        class_name = re.sub(' +', '_', class_name)
+        return class_name
 
     def shuffle_examples(self):
         """
@@ -113,19 +126,19 @@ class DataItem:
         self.feature_vector = None
         self.class_name = class_name
 
-        # a list to store point estimates of training-value from the MC estimation phase
-        self.tv_point_estimates = list()
-        self.training_value = None
+        self.tv_point_estimates = list()  # to store point estimates of training-value from the MC estimation phase
+        self.estimated_tv = None  # estimated training-value from MC estimation
+        self.predicted_tv = None  # predicted training-value from Training-ValueNet
 
 
-def get_random_subset(dataset_object, num_items):
+def get_random_subset(dataset_object, num_examples_per_class):
     """
     Return a copy of the dataset object that only contains a random subset of the original data items
     Parameters
     ----------
     dataset_object: tv_net.dataset.Dataset
         instance of the dataset class to take subset from
-    num_items: int
+    num_examples_per_class: int
         number of examples to include in subset
 
     Returns
@@ -133,11 +146,19 @@ def get_random_subset(dataset_object, num_items):
     subset: tv_net.dataset.Dataset
         new dataset object that contains only a random subset
     """
-    # TODO add ability to fix seed for shuffle to ensure same subset is used on repeat runs
     subset = copy.copy(dataset_object)
-    subset.shuffle_examples()  # randomly shuffle before choosing subset
-    if len(subset.items) > num_items:
-        subset.items = subset.items[:num_items]
+    subset.items = list()  # re-initialise to empty list
+    for class_name in dataset_object.class_names:
+        # Get a list of the examples belonging to this class
+        class_examples = [example for example in dataset_object.items if example.class_name == class_name]
+
+        # take subset
+        subset.items += class_examples[:num_examples_per_class]
+
+        if len(class_examples) < num_examples_per_class:
+            logging.warning('Class: {} only contains {} training examples'.format(class_name, len(class_examples)))
+            logging.warning('This is less than the {} examples per class specified for the MC estimation phase'.format(
+                num_examples_per_class))
 
     return subset
 
