@@ -17,11 +17,19 @@ class Config:
     # General
     EVAL_BATCH_SIZE = 32
 
-    # Image Classifier
+    # Underlying Classifier
     CNN_LAYERS_TRAINABLE = True
     FINAL_CONV_FEATURE_DIM = 100  # Dimension of final conv feature layer
 
-    # number of examples of training and examples per class for the MC estimation phase
+    # Training baseline classifier
+    FINETUNE_BASELINE_CLF = True  # whether to fine-tune baseline classifier from pre-trained weights
+    BASELINE_CLF_INIT_WEIGHTS = ''  # path to initialisation weights for classifier
+    
+    BASELINE_CLF_BATCH_SIZE = 32
+    BASELINE_EARLY_STOP_PATIENCE = 5
+    BASLINE_EARLY_STOP_MIN_DELTA = 0.01
+
+    # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 1000
     VAL_SUBSET_NUM_PER_CLASS = 50
     MC_EPISODES = 100

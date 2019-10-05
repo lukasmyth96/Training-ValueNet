@@ -16,6 +16,7 @@ import skimage.io
 import skimage.color
 from keras.utils import to_categorical
 
+
 class Dataset:
     def __init__(self):
         self.items = []
@@ -50,27 +51,36 @@ class Dataset:
         for class_name in class_names:
             class_dir = os.path.join(data_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]
-
+            # TODO add something to ignore files not of the correct type
             # Create a data item for each example
             for filename in filename_list:
-                filepath = os.path.join(data_dir, filename)
-                data_item = DataItem(filepath=filepath, class_name=class_name)
+                filepath = os.path.join(class_dir, filename)
+                data = self.load_single_example(filepath)
+                data_item = DataItem(filepath=filepath, data=data, class_name=class_name)
                 self.items.append(data_item)
 
-    def load_images(self):
+    @staticmethod
+    def load_single_example(filepath):
         """
-        Loads images from filepaths
+        Load data for a single example from filepath
+        Parameters
+        ----------
+        filepath: str
+            path to data for single example
+        Returns
+        -------
+        image:
         """
-        for item in self.items:
-            image = skimage.io.imread(item.filepath)
-            # If grayscale. Convert to RGB for consistency.
-            if image.ndim != 3:
-                image = skimage.color.gray2rgb(image)
-            # If has an alpha channel, remove it for consistency
-            if image.shape[-1] == 4:
-                image = image[..., :3]
 
-            item.image = image
+        image = skimage.io.imread(filepath)
+        # If grayscale. Convert to RGB for consistency.
+        if image.ndim != 3:
+            image = skimage.color.gray2rgb(image)
+        # If has an alpha channel, remove it for consistency
+        if image.shape[-1] == 4:
+            image = image[..., :3]
+
+        return image
 
     def _add_classes(self, class_names):
         """
@@ -96,18 +106,21 @@ class Dataset:
 
 
 class DataItem:
-    def __init__(self, filepath, class_name):
+    def __init__(self, filepath, data, class_name):
         self.filepath = filepath
-        self.filename = ntpath.basename(filepath)  # compatible with any os
-        self.image = None
-        self.class_name = class_name
+        self.filename = ntpath.basename(filepath)  # npath is compatible with any os
+        self.data = data
         self.feature_vector = None
+        self.class_name = class_name
+
+        # a list to store point estimates of training-value from the MC estimation phase
+        self.tv_point_estimates = list()
         self.training_value = None
 
 
 def get_random_subset(dataset_object, num_items):
     """
-    Return a new dataset object that contains a random subset of the original data items
+    Return a copy of the dataset object that only contains a random subset of the original data items
     Parameters
     ----------
     dataset_object: tv_net.dataset.Dataset
@@ -120,9 +133,11 @@ def get_random_subset(dataset_object, num_items):
     subset: tv_net.dataset.Dataset
         new dataset object that contains only a random subset
     """
+    # TODO add ability to fix seed for shuffle to ensure same subset is used on repeat runs
     subset = copy.copy(dataset_object)
     subset.shuffle_examples()  # randomly shuffle before choosing subset
     if len(subset.items) > num_items:
         subset.items = subset.items[:num_items]
 
     return subset
+
