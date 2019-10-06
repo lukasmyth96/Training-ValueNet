@@ -12,7 +12,7 @@ setup(
     license='MIT',
     description='A tool for performing automated label cleaning on weakly-supervised classification data',
     packages=['tv_net'],
-    install_requires=[]
+    install_requires=['tqdm', 'keras', 'scikit-image']
     , dependency_links=[
                         ],
     include_package_data=True,

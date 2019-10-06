@@ -11,14 +11,14 @@ Written by Luka Smyth
 class Config:
 
     NAME = 'example'
-    TRAIN_DATASET_DIR = ''  # directory containing weakly-labeled training data
-    VAL_DATASET_DIR = ''  # directory containing validation data - must be cleanly labelled!
-    OUTPUT_DIR = '../experiment_logs'  # directory to store all output from algorithm
-    NUM_CLASSES = 2
+    TRAIN_DATASET_DIR = '/home/luka/Documents/training_value_net/aircraft_7_dataset_resized/train'  # directory containing weakly-labeled training data
+    VAL_DATASET_DIR = '/home/luka/Documents/training_value_net/aircraft_7_dataset_resized/train/val'  # directory containing validation data - must be cleanly labelled!
+    OUTPUT_DIR = '/home/luka/Documents/training_value_net/experiments/aircraft_experiment_01'  # directory to store all output from algorithm
+    NUM_CLASSES = 7
     IMAGE_SIZE = 128  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
-    EVAL_BATCH_SIZE = 25
+    EVAL_BATCH_SIZE = 32
 
     # Underlying Classifier
     FEATURE_VECTOR_SHAPE = 100  # Dimension of final conv feature layer
@@ -26,12 +26,13 @@ class Config:
     # Training baseline model
     BASELINE_CLF_EPOCHS = 1000  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
-    BASELINE_EARLY_STOP_PATIENCE = 5
+    BASELINE_EARLY_STOP_PATIENCE = 10
     BASLINE_EARLY_STOP_MIN_DELTA = 0.01
+    BASELINE_CLF_OPTIMIZER = 'adam'
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 1000
-    VAL_SUBSET_NUM_PER_CLASS = 50
+    TRAIN_SUBSET_NUM_PER_CLASS = 100
+    VAL_SUBSET_NUM_PER_CLASS = 10
     MC_EPISODES = 100
     MC_EPOCHS = 1
 
@@ -43,8 +44,8 @@ class Config:
 
     # Training hyper-params for Training-ValueNets
     TVNET_VAL_SPLIT = 0.1  # proportion of examples to be used as validation data
-    TVNET_BATCH_SIZE = 25
-    TVNET_EPOCHS = 1000
-    TVNET_EARLY_STOP_PATIENCE = 10
-    TVNET_EARLY_STOP_MIN_DELTA = 0.01
+    TVNET_BATCH_SIZE = 32
+    TVNET_EPOCHS = 10000
+    TVNET_EARLY_STOP_PATIENCE = 100
+    TVNET_EARLY_STOP_MIN_DELTA = 0.001
 

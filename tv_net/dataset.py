@@ -13,6 +13,7 @@ import ntpath
 import os
 import random
 import re
+from tqdm import tqdm
 
 import skimage.io
 import skimage.color
@@ -55,7 +56,7 @@ class Dataset:
             filename_list = [f for f in os.listdir(class_dir)]
             # TODO add something to ignore files not of the correct type
             # Create a data item for each example
-            for filename in filename_list:
+            for filename in tqdm(filename_list[:1000]):
                 filepath = os.path.join(class_dir, filename)
                 data = self.load_single_example(filepath)
                 data_item = DataItem(filepath=filepath, data=data, class_name=class_name)

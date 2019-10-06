@@ -8,9 +8,10 @@ Written by Luka Smyth
 """
 import logging
 import os
-
+import pickle
 from tv_net.config import Config
 from tv_net.dataset import Dataset
+from tv_net.utils.common import pickle_save
 from tv_net.training_value_network import TrainingValueNet
 
 if __name__ == '__main__':
@@ -26,12 +27,13 @@ if __name__ == '__main__':
     logging.basicConfig(filename=os.path.join(config.OUTPUT_DIR, 'logs.log'), level=logging.INFO)
 
     # Load train and val dataset objects
-    logging.info('Loading training and validation data')
+    logging.info('Loading training set')
     train_dataset = Dataset(config.TRAIN_DATASET_DIR)
+    logging.info('Loading validation set')
     val_dataset = Dataset(config.VAL_DATASET_DIR)
 
     if not train_dataset.class_names == val_dataset.class_names:
-        raise ValueError('Mismatch between train and val class names')
+        raise ValueError('Mismatch between train and val class names')  # TODO should probably move all easy checks to the start
 
     # Create Training-ValueNets
     training_value_net = TrainingValueNet(config)
@@ -53,6 +55,9 @@ if __name__ == '__main__':
     # Predict training-value for ALL training examples using trained Training-ValueNets
     training_value_net.predict_training_values(train_dataset)
 
-    # TODO add saving of object and shutil move examples with negative training value into separate dir for inspection
+    # For now just save the objects
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'training_value_net.pkl'), training_value_net)
 
+    # TODO write something to copy or move the images into clean/dirty subsets for inspection
 

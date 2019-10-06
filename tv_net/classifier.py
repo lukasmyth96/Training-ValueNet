@@ -22,7 +22,7 @@ from keras.models import Model
 from keras.layers import Input, Dense, Conv2D, Reshape
 from keras.applications.mobilenet_v2 import MobileNetV2
 from keras.applications.mobilenet_v2 import preprocess_input as mobilenet_preprocess_input
-from keras.callbacks import TensorBoard, ModelCheckpoint, EarlyStopping
+from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 
 class Classifier:
@@ -148,7 +148,7 @@ class Classifier:
     def compile_classifier(self):
         """Method is public so that the classifier can be re-initialized during the MC estimation phase"""
         # TODO optimizer should be configurable
-        self.classification_model.compile(loss="categorical_crossentropy", optimizer='sgd')
+        self.classification_model.compile(loss="categorical_crossentropy", optimizer=self.config.BASELINE_CLF_OPTIMIZER)
 
     def batch_generator(self, dataset_object, shuffle=True, batch_size=1):
         """
@@ -230,10 +230,11 @@ class Classifier:
         return preprocessed_example
 
     def _set_log_dir(self):
-        now = datetime.datetime.now()
         # Directory for training logs
-        self.log_dir = os.path.join(self.config.OUTPUT_DIR, "{}_{:%Y-%m-%d-T%H-%M}".format(self.config.NAME.lower(), now))
+        self.log_dir = os.path.join(self.config.OUTPUT_DIR, 'baseline_classifier_weights')
 
         # Path to save after each epoch. Epoch placeholder gets filled by Keras in ModelCheckpoint Callback
-        self.__checkpoint_path = os.path.join(self.log_dir, "{}_*epoch*.h5".format(self.config.NAME.lower()))
-        self.__checkpoint_path = self.__checkpoint_path.replace("*epoch*", "{epoch:04d}")
+        self.__checkpoint_path = os.path.join(self.log_dir, 'best_checkpoint.h5')
+
+
+
