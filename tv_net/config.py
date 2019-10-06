@@ -15,7 +15,7 @@ class Config:
     VAL_DATASET_DIR = '/home/luka/Documents/training_value_net/aircraft_7_dataset_resized/train/val'  # directory containing validation data - must be cleanly labelled!
     OUTPUT_DIR = '/home/luka/Documents/training_value_net/experiments/aircraft_experiment_01'  # directory to store all output from algorithm
     NUM_CLASSES = 7
-    IMAGE_SIZE = 128  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
+    IMAGE_SIZE = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
     EVAL_BATCH_SIZE = 32

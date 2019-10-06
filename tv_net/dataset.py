@@ -17,17 +17,19 @@ from tqdm import tqdm
 
 import skimage.io
 import skimage.color
+from skimage.transform import resize
 from keras.utils import to_categorical
 
 
 class Dataset:
-    def __init__(self, dataset_dir):
+    def __init__(self, dataset_dir, img_dims):
         self.items = []
         self.num_classes = None
         self.num_examples = None
         self.class_names = []
         self.class_names_to_one_hot = {}
 
+        self.img_dims = img_dims
         self.dataset_dir = dataset_dir
         self.load_dataset()
 
@@ -64,8 +66,7 @@ class Dataset:
         self.num_examples = len(self.items)
         logging.info('Finished loading dataset with {} examples'.format(len(self.items)))
 
-    @staticmethod
-    def load_single_example(filepath):
+    def load_single_example(self, filepath):
         """
         Load data for a single example from filepath
         Parameters
@@ -84,6 +85,8 @@ class Dataset:
         # If has an alpha channel, remove it for consistency
         if image.shape[-1] == 4:
             image = image[..., :3]
+
+        image = resize(image, output_shape=self.img_dims)
 
         return image
 

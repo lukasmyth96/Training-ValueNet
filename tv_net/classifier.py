@@ -114,7 +114,7 @@ class Classifier:
         """
         Build keras model for feature extractor - using pre-trained mobilenet_v2 here because it is fast to train
         """
-        image_shape = (self.config.IMAGE_SIZE, self.config.IMAGE_SIZE, 3)
+        image_shape = self.config.IMAGE_SIZE + (3,)
         input_layer = Input(shape=image_shape)
         mobilenet = MobileNetV2(input_shape=image_shape, include_top=False)
 
