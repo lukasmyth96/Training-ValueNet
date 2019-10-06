@@ -205,7 +205,7 @@ class Classifier:
 
                 # Batch full?
                 if b >= batch_size:
-                    yield np.array(batch_examples), np.array(batch_labels)  # convert lists to np array
+                    yield np.concatenate(batch_examples, axis=0), np.concatenate(batch_labels, axis=0)  # convert lists to np array
                     # start a new batch
                     b = 0
 
