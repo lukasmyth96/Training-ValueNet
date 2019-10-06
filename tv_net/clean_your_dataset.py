@@ -28,9 +28,9 @@ if __name__ == '__main__':
 
     # Load train and val dataset objects
     logging.info('Loading training set')
-    train_dataset = Dataset(config.TRAIN_DATASET_DIR)
+    train_dataset = Dataset(config.TRAIN_DATASET_DIR, config.IMAGE_DIMS)
     logging.info('Loading validation set')
-    val_dataset = Dataset(config.VAL_DATASET_DIR)
+    val_dataset = Dataset(config.VAL_DATASET_DIR, config.IMAGE_DIMS)
 
     if not train_dataset.class_names == val_dataset.class_names:
         raise ValueError('Mismatch between train and val class names')  # TODO should probably move all easy checks to the start

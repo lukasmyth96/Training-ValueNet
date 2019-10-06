@@ -114,7 +114,7 @@ class Classifier:
         """
         Build keras model for feature extractor - using pre-trained mobilenet_v2 here because it is fast to train
         """
-        image_shape = self.config.IMAGE_SIZE + (3,)
+        image_shape = self.config.IMAGE_DIMS + (3,)
         input_layer = Input(shape=image_shape)
         mobilenet = MobileNetV2(input_shape=image_shape, include_top=False)
 
@@ -140,7 +140,7 @@ class Classifier:
         classifier: keras.engine.training.Model
             underlying classification model to be used
         """
-        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(self.feature_extractor)
+        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(self.feature_extractor.output)
 
         classifier = Model(inputs=self.feature_extractor.input, outputs=softmax_layer)
         return classifier
