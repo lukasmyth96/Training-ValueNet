@@ -189,7 +189,7 @@ class Classifier:
                 item = data_items[item_index]
                 data = item.data
                 data = self._preprocess_example(data)
-                class_label_one_hot = dataset_object.class_names_to_one_hot(item.class_name)
+                class_label_one_hot = dataset_object.class_names_to_one_hot[item.class_name]
 
                 # Reset batch arrays at start of batch
                 if b == 0:
