@@ -148,7 +148,8 @@ class Classifier:
     def compile_classifier(self):
         """Method is public so that the classifier can be re-initialized during the MC estimation phase"""
         # TODO optimizer should be configurable
-        self.classification_model.compile(loss="categorical_crossentropy", optimizer=self.config.BASELINE_CLF_OPTIMIZER)
+        self.classification_model.compile(loss="categorical_crossentropy", optimizer=self.config.BASELINE_CLF_OPTIMIZER,
+                                          metrics=['accuracy'])
 
     def batch_generator(self, dataset_object, shuffle=True, batch_size=1):
         """
@@ -232,6 +233,8 @@ class Classifier:
     def _set_log_dir(self):
         # Directory for training logs
         self.log_dir = os.path.join(self.config.OUTPUT_DIR, 'baseline_classifier_weights')
+        if not os.path.isdir(self.log_dir):
+            os.mkdir(self.log_dir)
 
         # Path to save after each epoch. Epoch placeholder gets filled by Keras in ModelCheckpoint Callback
         self.__checkpoint_path = os.path.join(self.log_dir, 'best_checkpoint.h5')
