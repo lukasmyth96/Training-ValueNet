@@ -76,7 +76,7 @@ class Classifier:
             ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_acc', mode='auto',
                             save_weights_only=True, save_best_only=True),
             EarlyStopping(monitor='val_acc', min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
-                          mode='auto')
+                          mode='auto', restore_best_weights=True)
         ]
 
         # Training
