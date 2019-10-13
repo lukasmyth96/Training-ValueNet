@@ -10,19 +10,20 @@ Classifier class encapsulates all functionality for underlying classifier.
 Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
+import copy
 import datetime
 import math
-import multiprocessing
 import os
 import random
 
 import numpy as np
 
 from keras.models import Model
-from keras.layers import Input, Dense, Conv2D, Reshape
-from keras.applications.mobilenet_v2 import MobileNetV2
-from keras.applications.mobilenet_v2 import preprocess_input as mobilenet_preprocess_input
-from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.layers import Input, Dense, Conv2D, Reshape, GlobalAveragePooling2D
+from keras.optimizers import SGD
+from keras.applications.mobilenet import MobileNet
+from keras.applications.mobilenet import preprocess_input as mobilenet_preprocess_input
+from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
 
 class Classifier:
@@ -43,6 +44,7 @@ class Classifier:
         self.feature_extractor = self._build_feature_extractor()
         self.classification_model = self._build_classifier()
         self.compile_classifier()
+        self. _set_log_dir()
 
     def train_baseline(self, train_dataset, val_dataset):
         """
@@ -56,6 +58,9 @@ class Classifier:
             validation dataset object
         """
 
+        assert self.config.NUM_CLASSES == train_dataset.num_classes
+        assert self.config.NUM_CLASSES == val_dataset.num_classes
+
         # Train and Val batch generators
         batch_size = self.config.BASELINE_CLF_BATCH_SIZE
         train_generator = self.batch_generator(train_dataset, batch_size=batch_size)
@@ -64,20 +69,17 @@ class Classifier:
         # Callbacks
         early_stop_patience = self.config.BASELINE_EARLY_STOP_PATIENCE
         early_stop_delta = self.config.BASLINE_EARLY_STOP_MIN_DELTA
+        checkpoint_path = self.__checkpoint_path
+
         callbacks = [
-            ModelCheckpoint(self.__checkpoint_path, verbose=1, monitor='val_acc', mode='auto',
+            TensorBoard(log_dir=self.log_dir, histogram_freq=0, write_graph=True, write_images=False),
+            ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_acc', mode='auto',
                             save_weights_only=True, save_best_only=True),
             EarlyStopping(monitor='val_acc', min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
                           mode='auto')
         ]
 
         # Training
-
-        # Work-around for Windows: Keras fails on Windows when using multiprocessing workers
-        if os.name is 'nt':
-            workers = 0
-        else:
-            workers = multiprocessing.cpu_count()
 
         train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
@@ -91,8 +93,8 @@ class Classifier:
             validation_data=val_generator,
             validation_steps=val_steps,
             max_queue_size=100,
-            workers=workers,
-            use_multiprocessing=True,
+            workers=1,
+            use_multiprocessing=False,
         )
 
     def compute_loss_on_dataset_object(self, dataset_object):
@@ -114,20 +116,9 @@ class Classifier:
         """
         Build keras model for feature extractor - using pre-trained mobilenet_v2 here because it is fast to train
         """
-        image_shape = self.config.IMAGE_DIMS + (3,)
+        image_shape = self.config.IMG_DIMS + (3,)
         input_layer = Input(shape=image_shape)
-        mobilenet = MobileNetV2(input_shape=image_shape, include_top=False)
-
-        # set whether mobilenet layers are trainable
-        for layer in mobilenet.layers:
-            layer.trainable = True
-
-        mobilenet_feature_map = mobilenet(input_layer)
-        mobilenet_feature_map_size = int(mobilenet_feature_map.shape[1].value)  # feature map side length used tp determine kernel size
-        final_conv_features = Conv2D(self.config.FEATURE_VECTOR_SHAPE, kernel_size=mobilenet_feature_map_size,
-                                     activation='relu')(mobilenet_feature_map)
-        feature_vector = Reshape((self.config.FEATURE_VECTOR_SHAPE,))(final_conv_features)
-
+        feature_vector = MobileNet(include_top=False, weights='imagenet', input_shape=image_shape, pooling='avg')(input_layer)
         feature_extractor = Model(inputs=input_layer, outputs=feature_vector)
         return feature_extractor
 
@@ -141,15 +132,13 @@ class Classifier:
             underlying classification model to be used
         """
         softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(self.feature_extractor.output)
-
         classifier = Model(inputs=self.feature_extractor.input, outputs=softmax_layer)
         return classifier
 
     def compile_classifier(self):
         """Method is public so that the classifier can be re-initialized during the MC estimation phase"""
-        # TODO optimizer should be configurable
-        self.classification_model.compile(loss="categorical_crossentropy", optimizer=self.config.BASELINE_CLF_OPTIMIZER,
-                                          metrics=['accuracy'])
+        optimizer = SGD(lr=self.config.BASELINE_CLF_LR)
+        self.classification_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
 
     def batch_generator(self, dataset_object, shuffle=True, batch_size=1):
         """
@@ -173,7 +162,7 @@ class Classifier:
         """
         b = 0  # batch item index
         item_index = 0
-        data_items = dataset_object.items
+        data_items = dataset_object.items  # create a copy of data item to avoid editing it
 
         batch_examples = list()  # initialising as list - convert both to numpy array before yielding
         batch_labels = list()
@@ -188,8 +177,8 @@ class Classifier:
 
                 # Get items natrix image and class id.
                 item = data_items[item_index]
-                data = item.data
-                data = self._preprocess_example(data)
+                data = copy.copy(item.data) # TODO investigate why this is needed
+                preprocessed_data = self._preprocess_example(data)
                 class_label_one_hot = dataset_object.class_names_to_one_hot[item.class_name]
 
                 # Reset batch arrays at start of batch
@@ -198,7 +187,7 @@ class Classifier:
                     batch_labels = list()
 
                 # Add to batch  #
-                batch_examples.append(data)
+                batch_examples.append(preprocessed_data)
                 batch_labels.append(class_label_one_hot)
 
                 b += 1
