@@ -7,6 +7,7 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
 import logging
+import math
 import numpy as np
 import os
 
@@ -94,9 +95,12 @@ class TrainingValueNet:
         ----------
         dataset_object: tv_net.dataset.Dataset
         """
+        batch_size = self.config.EVAL_BATCH_SIZE
+        steps = math.ceil(dataset_object.num_examples / batch_size)
         # Shuffle must be False!
-        batch_generator = self.classifier.batch_generator(dataset_object, shuffle=False, batch_size=self.config.EVAL_BATCH_SIZE)
-        feature_vector_array = self.classifier.feature_extractor.predict_generator(batch_generator)
+        batch_generator = self.classifier.batch_generator(dataset_object, shuffle=False, batch_size=batch_size)
+        feature_vector_array = self.classifier.feature_extractor.predict_generator(batch_generator, steps=steps, verbose=1)
+        feature_vector_array = feature_vector_array[:dataset_object.num_examples]
         assert feature_vector_array.shape[0] == dataset_object.num_examples
 
         # loop through examples and add feature vector as an attribute
@@ -150,6 +154,7 @@ class TrainingValueNet:
                 loss_improvement = val_losses[-1] - new_val_loss
 
                 # store loss improvement in the data item
+                # TODO - obviously this won't work! - example is a numpy array not the item
                 example.tv_point_estimates.append(loss_improvement)
 
                 # Updates
