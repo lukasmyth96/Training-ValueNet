@@ -11,7 +11,7 @@ Written by Luka Smyth
 class Config:
 
     NAME = 'example'
-    TRAIN_DATASET_DIR = '/floyd/input/aircraft_7_dataset/train'  # directory containing weakly-labeled training data
+    TRAIN_DATASET_DIR = '/floyd/input/aircraft_7_dataset/clean_train'  # directory containing weakly-labeled training data
     VAL_DATASET_DIR = '/floyd/input/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
     OUTPUT_DIR = '/floyd/home/experiment_01'  # directory to store all output from algorithm
     NUM_CLASSES = 2
@@ -20,9 +20,6 @@ class Config:
 
     # General
     EVAL_BATCH_SIZE = 32
-
-    # Underlying Classifier
-    FEATURE_VECTOR_SHAPE = 100  # Dimension of final conv feature layer
 
     # Training baseline model
     BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
@@ -33,9 +30,9 @@ class Config:
     BASELINE_CLF_LR = 0.001
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 100
+    TRAIN_SUBSET_NUM_PER_CLASS = 50
     VAL_SUBSET_NUM_PER_CLASS = 10
-    MC_EPISODES = 100
+    MC_EPISODES = 1
     MC_EPOCHS = 1
 
     # Training-ValueNet architecture
@@ -47,7 +44,7 @@ class Config:
     # Training hyper-params for Training-ValueNets
     TVNET_VAL_SPLIT = 0.1  # proportion of examples to be used as validation data
     TVNET_BATCH_SIZE = 32
-    TVNET_EPOCHS = 10000
-    TVNET_EARLY_STOP_PATIENCE = 100
-    TVNET_EARLY_STOP_MIN_DELTA = 0.001
+    TVNET_EPOCHS = 10
+    TVNET_EARLY_STOP_PATIENCE = 10
+    TVNET_EARLY_STOP_MIN_DELTA = 0.01
 

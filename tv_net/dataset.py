@@ -183,6 +183,7 @@ def get_random_subset(dataset_object, num_examples_per_class):
             logging.warning('Class: {} only contains {} training examples'.format(class_name, len(class_examples)))
             logging.warning('This is less than the {} examples per class specified for the MC estimation phase'.format(
                 num_examples_per_class))
-
+            
+    subset.num_examples = len(subset.items)
     return subset
 

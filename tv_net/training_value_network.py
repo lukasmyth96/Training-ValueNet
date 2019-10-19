@@ -6,10 +6,13 @@ TrainingValueNet class encapsulates all functionality for algorithm.
 Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
+import copy
 import logging
 import math
 import numpy as np
 import os
+
+from tqdm import tqdm
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout
@@ -50,7 +53,7 @@ class TrainingValueNet:
         """
         # Extract class names and feature vector shape from dataset
         class_names = dataset_object.class_names
-        input_dim = self.config.FEATURE_VECTOR_SHAPE
+        input_dim = self.classifier.feature_extractor.output.shape[1].value
 
         # Extract architecture params from config
         hl1_units = self.config.TVNET_HL1_UNITS
@@ -118,36 +121,37 @@ class TrainingValueNet:
             training dataset object
         val_dataset: tv_net.dataset.Dataset
             validation dataset object
-
-        Returns
-        --------
-        train_subset: tv_net.dataset.Dataset
-            returns training subset that contains estimates of training-value.
-            this subset is then used to train the Training-ValueNet for each class
         """
 
         # Get random subset of train and val to estimate on
         train_subset = get_random_subset(train_dataset, self.config.TRAIN_SUBSET_NUM_PER_CLASS)
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
 
-        # Get batch generators for training set - batch size must be 1
-        batch_generator = self.classifier.batch_generator(train_subset, shuffle=True, batch_size=1)
-
         for episode in range(self.config.MC_EPISODES):
-            self.classifier.compile_classifier()  # re-initialize at start of each episode
-
-            num_train_examples = len(train_subset.items)
-            iteration = 0
-
+            print('Starting episode: {} of ME estimation'.format(episode + 1))
+            
+            # Re-initialize at start of each episode - DONT THINK THIS ACTUALLY REINITIALIZES WEIGHTS
+            self.classifier.compile_classifier()  
+            
+            # Shuffle training examples
+            train_subset.shuffle_examples()  
+            
+            # Compute and store initial validation loss
             val_losses = list()  # Create list to store val losses
             val_losses.append(self.classifier.compute_loss_on_dataset_object(val_subset))  # append initial val loss
-            while iteration < (self.config.MC_EPOCHS * num_train_examples):
 
-                # Get next example to train on
-                example, one_hot_label = batch_generator.__next__()
+            iteration = 0
+            for iteration in tqdm(range(self.config.MC_EPOCHS * train_subset.num_examples)):
+
+                # Get next item to train on
+                item = train_subset.items[iteration]
+                data = copy.copy(item.data) # TODO investigate why this is needed
+                preprocessed_data = self.classifier._preprocess_example(data)
+                one_hot_label = train_subset.class_names_to_one_hot[item.class_name]
+                one_hot_label = np.expand_dims(one_hot_label, axis=0)
 
                 # Train classifier on image
-                self.classifier.classification_model.train_on_batch(example, one_hot_label)
+                self.classifier.classification_model.train_on_batch(preprocessed_data, one_hot_label)
 
                 # Compute immediate improvement in val loss
                 new_val_loss = self.classifier.compute_loss_on_dataset_object(val_subset)
@@ -155,16 +159,15 @@ class TrainingValueNet:
 
                 # store loss improvement in the data item
                 # TODO - obviously this won't work! - example is a numpy array not the item
-                example.tv_point_estimates.append(loss_improvement)
+                item.tv_point_estimates.append(loss_improvement)
 
                 # Updates
                 val_losses.append(new_val_loss)
-                iteration += 1
 
         # Now compute estimate of training-value for each example in the training subset
         # This is simply the mean immediate improvement in loss that was observed when that example was trained on
-        for example in train_dataset.items:
-            example.estimated_tv = np.mean(example.tv_point_estimates)
+        for item in train_dataset.items:
+            item.estimated_tv = np.mean(item.tv_point_estimates)
 
         return train_subset
 
@@ -200,10 +203,10 @@ class TrainingValueNet:
                 ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_loss', mode='auto',
                                 save_weights_only=True, save_best_only=True),
                 EarlyStopping(monitor='val_loss', min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
-                              mode='auto')
+                              mode='auto', restore_best_weights=True)
             ]
 
-            tv_net.fit(features_array, targets_array, batch_size=batch_size, callbacks=callbacks, validation_split=val_split)
+            tv_net.fit(features_array, targets_array, epochs=epochs, batch_size=batch_size, callbacks=callbacks, validation_split=val_split)
             logging.info('Finished training Training-ValueNet for class {}'.format(class_name))
 
     def predict_training_values(self, dataset_object):

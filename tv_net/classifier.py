@@ -108,8 +108,10 @@ class Classifier:
         loss: float
         """
         # TODO find way to break down evaluation into multiple steps
-        evaluation_generator = self.batch_generator(dataset_object, batch_size=dataset_object.num_examples)
-        loss = self.classification_model.evaluate_generator(evaluation_generator, steps=1)
+        batch_size = self.config.EVAL_BATCH_SIZE
+        steps = math.ceil(dataset_object.num_examples / batch_size)
+        evaluation_generator = self.batch_generator(dataset_object, shuffle=False, batch_size=batch_size)
+        loss = self.classification_model.evaluate_generator(evaluation_generator, steps=steps)[0] 
         return loss
 
     def _build_feature_extractor(self):
@@ -200,7 +202,7 @@ class Classifier:
                     b = 0
 
             except (GeneratorExit, KeyboardInterrupt):
-                raise
+                raise             
 
     @staticmethod
     def _preprocess_example(example):
