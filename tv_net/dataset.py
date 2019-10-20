@@ -13,8 +13,9 @@ import ntpath
 import os
 import random
 import re
-from tqdm import tqdm
+import time
 
+from tqdm import tqdm
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from skimage.transform import resize
@@ -68,7 +69,7 @@ class Dataset:
 
         self._add_classes(class_names)
         print('Loading dataset with following class names: {}'.format(self.class_names))
-
+        time.sleep(0.2) # gives time for print before progress bar appears
         for class_name in class_names:
             class_dir = os.path.join(self.dataset_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]
@@ -175,7 +176,7 @@ def get_random_subset(dataset_object, num_examples_per_class):
     for class_name in dataset_object.class_names:
         # Get a list of the examples belonging to this class
         class_examples = [example for example in dataset_object.items if example.class_name == class_name]
-
+        random.shuffle(class_examples)
         # take subset
         subset.items += class_examples[:num_examples_per_class]
 

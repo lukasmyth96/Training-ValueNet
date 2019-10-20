@@ -9,10 +9,13 @@ Written by Luka Smyth
 import logging
 import os
 import pickle
+import shutil
+
 from tv_net.config import Config
 from tv_net.dataset import Dataset
 from tv_net.utils.common import pickle_save
 from tv_net.training_value_network import TrainingValueNet
+
 
 if __name__ == '__main__':
 
@@ -57,7 +60,24 @@ if __name__ == '__main__':
 
     # For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
-    pickle_save(os.path.join(config.OUTPUT_DIR, 'training_value_net.pkl'), training_value_net)
+    
+    # Copy images into clean and dirty folders - This should move to it's own function
+    clean_dir = os.path.join(config.OUTPUT_DIR, 'clean_training_examples')
+    os.mkdir(clean_dir)
+    dirty_dir = os.path.join(config.OUTPUT_DIR, 'dirty_training_examples')
+    os.mkdir(dirty_dir)
+    
+    for class_name in train_dataset.class_names:
+        os.mkdir(os.path.join(clean_dir, class_name))
+        os.mkdir(os.path.join(dirty_dir, class_name))
+    
+    for item in tqdm(train_dataset.items):
+        filename = os.path.basename(item.filepath)
+        new_filename = 'tv={:.2E}_{}'.format(item.predicted_tv, filename)
+        
+        if tv > 0:
+            dest = os.path.join(clean_dir, item.class_name, new_filename) 
+        else:
+            dest = os.path.join(dirty_dir, item.class_name, new_filename) 
 
-    # TODO write something to copy or move the images into clean/dirty subsets for inspection
-
+        shutil.copy(item.filepath, dest)

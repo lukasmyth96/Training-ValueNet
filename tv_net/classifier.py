@@ -42,9 +42,10 @@ class Classifier:
 
         # build feature extractor and classifier and compile
         self.feature_extractor = self._build_feature_extractor()
-        self.classification_model = self._build_classifier()
-        self.compile_classifier()
-        self. _set_log_dir()
+        self.classification_head = self._build_classication_head()
+        # Store initial weights to randomly re-initialize during MC estimation phase
+        self.classification_head_init_weights = self.classification_head.get_weights()
+        self._set_log_dir()
 
     def train_baseline(self, train_dataset, val_dataset):
         """
@@ -60,6 +61,14 @@ class Classifier:
 
         assert self.config.NUM_CLASSES == train_dataset.num_classes
         assert self.config.NUM_CLASSES == val_dataset.num_classes
+        
+        # Combine feature extractor and MLP classifier
+        input_layer = self.feature_extractor.input
+        output_layer = self.classification_head(self.feature_extractor(input_layer))
+        baseline_model = Model(inputs=input_layer, outputs=output_layer)
+        
+        # Compile
+        self.compile_classifier(baseline_model)
 
         # Train and Val batch generators
         batch_size = self.config.BASELINE_CLF_BATCH_SIZE
@@ -84,7 +93,7 @@ class Classifier:
         train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
-        self.classification_model.fit_generator(
+        baseline_model.fit_generator(
             train_generator,
             initial_epoch=0,
             epochs=self.config.BASELINE_CLF_EPOCHS,
@@ -94,14 +103,15 @@ class Classifier:
             validation_steps=val_steps,
             max_queue_size=100,
             workers=1,
-            use_multiprocessing=False,
-        )
+            use_multiprocessing=False,)
 
-    def compute_loss_on_dataset_object(self, dataset_object):
+    def compute_loss_on_dataset_object(self, classification_head, dataset_object):
         """
-        Compute loss of classifier on dataset object
+        Compute loss of classification head on dataset object
+        This assumes that feature vectors have already been extracted for all items in dataset object
         Parameters
         ----------
+        classification_head: keras.engine.training.Model
         dataset_object: tv_net.dataset.Dataset
         Returns
         -------
@@ -109,9 +119,15 @@ class Classifier:
         """
         # TODO find way to break down evaluation into multiple steps
         batch_size = self.config.EVAL_BATCH_SIZE
-        steps = math.ceil(dataset_object.num_examples / batch_size)
-        evaluation_generator = self.batch_generator(dataset_object, shuffle=False, batch_size=batch_size)
-        loss = self.classification_model.evaluate_generator(evaluation_generator, steps=steps)[0] 
+        
+        features_list = [item.feature_vector for item in dataset_object.items]
+        features_array = np.array(features_list)
+        
+        label_list = [item.class_name for item in dataset_object.items]
+        class_one_hot_list = [dataset_object.class_names_to_one_hot[label] for label in label_list]
+        labels_array = np.stack(class_one_hot_list, axis=0)
+        
+        loss = classification_head.evaluate(features_array, labels_array, batch_size=batch_size, verbose=0)[0] 
         return loss
 
     def _build_feature_extractor(self):
@@ -124,23 +140,38 @@ class Classifier:
         feature_extractor = Model(inputs=input_layer, outputs=feature_vector)
         return feature_extractor
 
-    def _build_classifier(self):
+    def _build_classication_head(self):
         """
         Build keras model for underlying classifier
         The classifier should be a small MLP that sits on top of the feature extractor
         Returns
         -------
-        classifier: keras.engine.training.Model
+        classification_head: keras.engine.training.Model
             underlying classification model to be used
         """
-        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(self.feature_extractor.output)
-        classifier = Model(inputs=self.feature_extractor.input, outputs=softmax_layer)
-        return classifier
-
-    def compile_classifier(self):
-        """Method is public so that the classifier can be re-initialized during the MC estimation phase"""
+        input_layer = Input(shape=(self.feature_extractor.output_shape[1],))
+        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(input_layer)
+        classification_head = Model(inputs=input_layer, outputs=softmax_layer)
+        return classification_head
+    
+    def compile_classifier(self, model):
+        """ Compile classification model"""
         optimizer = SGD(lr=self.config.BASELINE_CLF_LR)
-        self.classification_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+        model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+    
+    def reinitialize_classification_head(self, classification_head):
+        """ Approximation of randomly reinitializing weights of classification head
+        This is used at the start of each episode during the MC estimation phase.
+        Parameters
+        ----------
+        classification_head: keras.engine.training.Model
+            model to reinitialize
+        """
+        init_weights = self.classification_head_init_weights
+        new_weights = [np.random.permutation(w.flat).reshape(w.shape) for w in init_weights]
+        classification_head.set_weights(new_weights)
+        
+        return classification_head
 
     def batch_generator(self, dataset_object, shuffle=True, batch_size=1):
         """

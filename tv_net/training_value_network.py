@@ -126,39 +126,42 @@ class TrainingValueNet:
         # Get random subset of train and val to estimate on
         train_subset = get_random_subset(train_dataset, self.config.TRAIN_SUBSET_NUM_PER_CLASS)
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
-
+        
+        # Compile classification head
+        classification_head = self.classifier._build_classication_head()
+        self.classifier.compile_classifier(classification_head)
+        
         for episode in range(self.config.MC_EPISODES):
-            print('Starting episode: {} of ME estimation'.format(episode + 1))
+            print('Starting episode: {} of MC estimation phase'.format(episode + 1))
             
-            # Re-initialize at start of each episode - DONT THINK THIS ACTUALLY REINITIALIZES WEIGHTS
-            self.classifier.compile_classifier()  
+            # Re-initialize classification head weights at start of each episode 
+            classification_head = self.classifier.reinitialize_classification_head(classification_head)  
             
             # Shuffle training examples
             train_subset.shuffle_examples()  
             
             # Compute and store initial validation loss
             val_losses = list()  # Create list to store val losses
-            val_losses.append(self.classifier.compute_loss_on_dataset_object(val_subset))  # append initial val loss
+            val_losses.append(self.classifier.compute_loss_on_dataset_object(classification_head, val_subset))  # append initial val loss
 
             iteration = 0
             for iteration in tqdm(range(self.config.MC_EPOCHS * train_subset.num_examples)):
 
                 # Get next item to train on
-                item = train_subset.items[iteration]
-                data = copy.copy(item.data) # TODO investigate why this is needed
-                preprocessed_data = self.classifier._preprocess_example(data)
+                item = train_subset.items[iteration % train_subset.num_examples]
+                feature_vector = copy.copy(item.feature_vector)
+                feature_vector = np.expand_dims(feature_vector, axis=0)
                 one_hot_label = train_subset.class_names_to_one_hot[item.class_name]
                 one_hot_label = np.expand_dims(one_hot_label, axis=0)
 
-                # Train classifier on image
-                self.classifier.classification_model.train_on_batch(preprocessed_data, one_hot_label)
+                # Train classification head on example
+                classification_head.train_on_batch(feature_vector, one_hot_label)
 
                 # Compute immediate improvement in val loss
-                new_val_loss = self.classifier.compute_loss_on_dataset_object(val_subset)
+                new_val_loss = self.classifier.compute_loss_on_dataset_object(classification_head, val_subset)
                 loss_improvement = val_losses[-1] - new_val_loss
 
                 # store loss improvement in the data item
-                # TODO - obviously this won't work! - example is a numpy array not the item
                 item.tv_point_estimates.append(loss_improvement)
 
                 # Updates
@@ -219,14 +222,14 @@ class TrainingValueNet:
         """
         for class_name, tv_net in self.tv_nets.items():
             # Get a list of features for all examples in this class
-            features = [example.feature_vector for example in dataset_object.items
-                        if example.class_name == class_name]
-            features_array = np.array(features)
+            class_items = [item for item in dataset_object.items if item.class_name == class_name]
+            features_list = [item.feature_vector for item in class_items]
+            features_array = np.array(features_list)
 
-            predictions_array = tv_net.predict(features_array)
+            predictions_array = tv_net.predict(features_array, verbose=0)
             # loop through examples and add feature vector as an attribute
-            for idx, example in enumerate(dataset_object.items):
-                example.predicted_tv = predictions_array[idx]
+            for idx, item in enumerate(class_items):
+                item.predicted_tv = predictions_array[idx][0]
 
 
 

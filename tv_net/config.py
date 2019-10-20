@@ -32,8 +32,8 @@ class Config:
     # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 50
     VAL_SUBSET_NUM_PER_CLASS = 10
-    MC_EPISODES = 1
-    MC_EPOCHS = 1
+    MC_EPISODES = 2
+    MC_EPOCHS = 2
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100
