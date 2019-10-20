@@ -10,6 +10,7 @@ import logging
 import os
 import pickle
 import shutil
+from tqdm import tqdm
 
 from tv_net.config import Config
 from tv_net.dataset import Dataset
@@ -75,7 +76,7 @@ if __name__ == '__main__':
         filename = os.path.basename(item.filepath)
         new_filename = 'tv={:.2E}_{}'.format(item.predicted_tv, filename)
         
-        if tv > 0:
+        if item.predicted_tv > 0:
             dest = os.path.join(clean_dir, item.class_name, new_filename) 
         else:
             dest = os.path.join(dirty_dir, item.class_name, new_filename) 
