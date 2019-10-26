@@ -95,7 +95,7 @@ class Classifier:
         train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
-        baseline_model.fit_generator(
+        history = baseline_model.fit_generator(
             train_generator,
             initial_epoch=0,
             epochs=self.config.BASELINE_CLF_EPOCHS,
@@ -105,7 +105,10 @@ class Classifier:
             validation_steps=val_steps,
             max_queue_size=100,
             workers=1,
-            use_multiprocessing=False,)
+            use_multiprocessing=False, )
+
+        # Visualize training
+
 
     def compute_loss_on_dataset_object(self, classification_head, dataset_object):
         """
@@ -205,10 +208,10 @@ class Classifier:
                 if shuffle and item_index == 0:
                     random.shuffle(data_items)
 
-                # Get items natrix image and class id.
+                # Get item's image and class .
                 item = data_items[item_index]
-                data = copy.copy(item.data) # TODO investigate why this is needed
-                preprocessed_data = self._preprocess_example(data)
+                image = dataset_object.load_single_example(item.filepath)
+                preprocessed_data = self._preprocess_example(image)
                 class_label_one_hot = dataset_object.class_names_to_one_hot[item.class_name]
 
                 # Reset batch arrays at start of batch

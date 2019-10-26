@@ -1,6 +1,7 @@
 """
 Various functions commonly used
 """
+from distutils.util import strtobool
 import logging
 import pickle
 
@@ -34,3 +35,25 @@ def create_logger(log_path):
 
     return logger
 
+
+# TODO use below function to is setup checks
+def ask_user_confirmation(question):
+    """
+    Ask yes / question to user and return bool
+    Parameters
+    ----------
+    question: str
+        yes / no question to ask
+    Returns
+    -------
+    response: bool
+        whether user confirms or not
+    """
+    question += ' [y / n]'
+    try:
+        response_str = input(question)
+        response_bool = strtobool(response_str)
+        return response_bool
+    except ValueError:
+        print('Invalid response - Try again')
+        ask_user_confirmation(question)

@@ -132,7 +132,7 @@ class TrainingValueNet:
         train_subset = get_random_subset(train_dataset, self.config.TRAIN_SUBSET_NUM_PER_CLASS)
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
         
-        # Compile classification head
+        # Build and compile classification head
         classification_head = self.classifier.build_classification_head()
         optimizer = SGD(lr=self.config.MC_LR)
         classification_head.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])

@@ -25,6 +25,7 @@ if __name__ == '__main__':
     # Create output dir
     if not os.path.isdir(config.OUTPUT_DIR):
         os.makedirs(config.OUTPUT_DIR)
+    if not os.path.isdir(os.path.join(config.OUTPUT_DIR, 'visualizations')):
         os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
 
     # Set up logger
@@ -52,7 +53,7 @@ if __name__ == '__main__':
 
     # Monte-Carlo Estimation Phase
     train_subset = training_value_net.mc_estimation_phase(train_dataset, val_dataset)
-    # TODO figure out why tere is a 'Mean of empty slice.' warning at end of above line running
+    # TODO figure out why there is a 'Mean of empty slice.' warning at end of above line running
     # Training each Training-ValueNet on the estimates from the MC estimation phase
     training_value_net.train_tv_nets(train_subset)
 

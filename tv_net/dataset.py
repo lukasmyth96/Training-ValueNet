@@ -77,6 +77,7 @@ class Dataset:
         self.logger.info('Loading dataset with following class names: {}'.format(self.class_names))
         time.sleep(0.2) # gives time for self.logger.info before progress bar appears
         for class_name in class_names:
+            self.logger.info('Loading class: {}...'.format(class_name))
             class_dir = os.path.join(self.dataset_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]
             filename_list.sort()
@@ -84,8 +85,7 @@ class Dataset:
             # Create a data item for each example
             for filename in tqdm(filename_list):
                 filepath = os.path.join(class_dir, filename)
-                data = self.load_single_example(filepath)
-                data_item = DataItem(filepath=filepath, data=data, class_name=class_name)
+                data_item = DataItem(filepath=filepath, class_name=class_name)
                 self.items.append(data_item)
         self.num_examples = len(self.items)
         logging.info('Finished loading dataset with {} examples'.format(len(self.items)))
@@ -139,10 +139,10 @@ class Dataset:
 
 
 class DataItem:
-    def __init__(self, filepath, data, class_name):
+    def __init__(self, filepath, class_name):
         self._filepath = filepath
         self.filename = ntpath.basename(filepath)  # npath is compatible with any os
-        self._data = data
+        self._data = None
         self._feature_vector = None
         self._class_name = class_name
 

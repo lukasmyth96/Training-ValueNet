@@ -59,3 +59,32 @@ def produce_tv_histograms(dataset_object):
         ax.set_title('Histogram of predicted training-values for class: {}'.format(class_name))
         fig.savefig(output_path)
         plt.show()
+
+
+def plot_training_history(history):
+    """
+    Plot loss and acc for baseline training
+    Parameters
+    ----------
+    history: keras.callbacks.History
+        keras history object
+    """
+    # Plot training & validation accuracy values
+    fig, ax = plt.subplots()
+    ax.plot(history.history['acc'])
+    ax.plot(history.history['val_acc'])
+    ax.title('Model accuracy')
+    ax.ylabel('Accuracy')
+    ax.xlabel('Epoch')
+    ax.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
+
+    # Plot training & validation loss values
+    fig, ax = plt.subplots()
+    ax.plot(history.history['loss'])
+    ax.plot(history.history['val_loss'])
+    ax.title('Model loss')
+    ax.ylabel('Loss')
+    ax.xlabel('Epoch')
+    ax.legend(['Train', 'Test'], loc='upper left')
+    plt.show()
