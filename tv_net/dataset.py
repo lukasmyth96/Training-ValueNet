@@ -18,14 +18,17 @@ import time
 from tqdm import tqdm
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
-from skimage.transform import resize
 from keras.utils import to_categorical
+
+from tv_net.utils.common import create_logger
 
 
 class Dataset:
     def __init__(self, config, subset):
 
+        self.subset = subset
         self.config = config
+        self.logger = create_logger(config.LOG_PATH)
         assert subset in ['train', 'val', 'test']
 
         self.items = []
@@ -57,19 +60,19 @@ class Dataset:
             .
             etc.
         """
-
+        self.logger.info('Loading data from: {}'.format(self.dataset_dir))
         class_names = [directory for directory in os.listdir(self.dataset_dir)]
         class_names.sort()
-        print('Found following class names: {}'.format(class_names))
+        self.logger.info('Found following class names: {}'.format(class_names))
 
         # override list of class names if a subset to use is specified
         if self.config.CLASSES_TO_USE is not None:
             class_names = self.config.CLASSES_TO_USE
-            print('Using following subset of classes: {}'.format(class_names))
+            self.logger.info('Using following subset of classes: {}'.format(class_names))
 
         self._add_classes(class_names)
-        print('Loading dataset with following class names: {}'.format(self.class_names))
-        time.sleep(0.2) # gives time for print before progress bar appears
+        self.logger.info('Loading dataset with following class names: {}'.format(self.class_names))
+        time.sleep(0.2) # gives time for self.logger.info before progress bar appears
         for class_name in class_names:
             class_dir = os.path.join(self.dataset_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]

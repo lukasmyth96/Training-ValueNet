@@ -1,6 +1,7 @@
 """
 Various functions commonly used
 """
+import logging
 import pickle
 
 
@@ -16,4 +17,20 @@ def pickle_load(filename):
         an_object = pickle.load(input_file, encoding='bytes')
 
     return an_object
+
+
+def create_logger(log_path):
+    """ Setup logger to filepath and stderr"""
+
+    logging.basicConfig(
+        level=logging.INFO,
+        handlers=[
+            logging.FileHandler(log_path),
+            logging.StreamHandler()
+        ])
+
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
+    return logger
 

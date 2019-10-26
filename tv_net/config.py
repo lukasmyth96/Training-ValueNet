@@ -7,19 +7,30 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
 
+import os
 
 class Config:
 
     NAME = 'example'
-    TRAIN_DATASET_DIR = '/floyd/input/aircraft_7_dataset/clean_train'  # directory containing weakly-labeled training data
-    VAL_DATASET_DIR = '/floyd/input/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
-    OUTPUT_DIR = '/floyd/home/experiment_01'  # directory to store all output from algorithm
+
+    TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/clean_train'  # directory containing weakly-labeled training data
+    VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
+
+    OUTPUT_DIR = '/home/ubuntu/results_store/training_value_net/experiment_01'  # directory to store all output from algorithm
+    LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
+
     NUM_CLASSES = 2
     CLASSES_TO_USE = ['airliner', 'helicopter']
     IMG_DIMS = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
     EVAL_BATCH_SIZE = 32
+
+    # Visualizations
+    PRODUCE_TSNE = True  # If True a TSNE visualization will be produced of the feature vectors after baseline training
+    TSNE_NUM_EXAMPLES = 1000  # Number of examples to include in T-SNE
+
+    PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
     # Training baseline model
     BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
@@ -47,4 +58,3 @@ class Config:
     TVNET_EPOCHS = 10
     TVNET_EARLY_STOP_PATIENCE = 10
     TVNET_EARLY_STOP_MIN_DELTA = 0.01
-

@@ -6,17 +6,16 @@ Script to clean dataset
 Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
-import logging
 import os
-import pickle
 import shutil
 from tqdm import tqdm
 
+from tv_net.utils.common import create_logger
 from tv_net.config import Config
 from tv_net.dataset import Dataset
 from tv_net.utils.common import pickle_save
 from tv_net.training_value_network import TrainingValueNet
-
+from tv_net.utils.visualize import tsne_visualization, produce_tv_histograms
 
 if __name__ == '__main__':
 
@@ -26,14 +25,13 @@ if __name__ == '__main__':
     # Create output dir
     if not os.path.isdir(config.OUTPUT_DIR):
         os.makedirs(config.OUTPUT_DIR)
+        os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
 
     # Set up logger
-    logging.basicConfig(filename=os.path.join(config.OUTPUT_DIR, 'logs.log'), level=logging.INFO)
+    logger = create_logger(config.LOG_PATH)
 
     # Load train and val dataset objects
-    logging.info('Loading training set')
     train_dataset = Dataset(config, subset='train')
-    logging.info('Loading validation set')
     val_dataset = Dataset(config, subset='val')
 
     if not train_dataset.class_names == val_dataset.class_names:
@@ -49,6 +47,8 @@ if __name__ == '__main__':
     # Extract feature vectors from baseline model and store them as attribute of each example
     training_value_net.extract_feature_vectors(train_dataset)
     training_value_net.extract_feature_vectors(val_dataset)
+    if config.PRODUCE_TSNE:
+        tsne_visualization(train_dataset, num_examples=config.TSNE_NUM_EXAMPLES)
 
     # Monte-Carlo Estimation Phase
     train_subset = training_value_net.mc_estimation_phase(train_dataset, val_dataset)
@@ -58,6 +58,8 @@ if __name__ == '__main__':
 
     # Predict training-value for ALL training examples using trained Training-ValueNets
     training_value_net.predict_training_values(train_dataset)
+    if config.PRODUCE_TV_HISTOGRAM:
+        produce_tv_histograms(train_dataset)
 
     # For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)

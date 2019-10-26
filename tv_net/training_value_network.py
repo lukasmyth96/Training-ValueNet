@@ -7,7 +7,6 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
 import copy
-import logging
 import math
 import numpy as np
 import os
@@ -15,8 +14,10 @@ import os
 from tqdm import tqdm
 
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation, Dropout
+from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+
+from tv_net.utils.common import create_logger
 from tv_net.classifier import Classifier
 from tv_net.dataset import get_random_subset
 
@@ -34,8 +35,10 @@ class TrainingValueNet:
         """
         # TODO for missing config params at this stage
         self.config = config
+        self.logger = create_logger(config.LOG_PATH)
         self.classifier = Classifier(config)
         self.tv_nets = dict()
+        self._set_log_dir()
 
     def build_tv_nets(self, dataset_object):
         """
@@ -73,7 +76,7 @@ class TrainingValueNet:
             tv_nets[class_name] = tv_net
 
         self.tv_nets = tv_nets
-        logging.info('Finished building Training-ValueNetworks for classes: {}'.format(class_names))
+        self.logger.info('Finished building Training-ValueNetworks for classes: {}'.format(class_names))
 
     def train_baseline_classifier(self, train_dataset, val_dataset):
         """
@@ -85,9 +88,9 @@ class TrainingValueNet:
         val_dataset: tv_net.dataset.Dataset
             validation dataset object
         """
-        logging.info('Training baseline classification model')
-        logging.info('Training on {} examples'.format(train_dataset.num_examples))
-        logging.info('Evaluating on {} examples'.format(val_dataset.num_examples))
+        self.logger.info('Training baseline classification model')
+        self.logger.info('Training on {} examples'.format(train_dataset.num_examples))
+        self.logger.info('Evaluating on {} examples'.format(val_dataset.num_examples))
         self.classifier.train_baseline(train_dataset, val_dataset)
 
     def extract_feature_vectors(self, dataset_object):
@@ -98,6 +101,7 @@ class TrainingValueNet:
         ----------
         dataset_object: tv_net.dataset.Dataset
         """
+        self.logger.info('Extracting feature vectors')
         batch_size = self.config.EVAL_BATCH_SIZE
         steps = math.ceil(dataset_object.num_examples / batch_size)
         # Shuffle must be False!
@@ -128,11 +132,11 @@ class TrainingValueNet:
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
         
         # Compile classification head
-        classification_head = self.classifier._build_classication_head()
+        classification_head = self.classifier._build_classification_head()
         self.classifier.compile_classifier(classification_head)
         
         for episode in range(self.config.MC_EPISODES):
-            print('Starting episode: {} of MC estimation phase'.format(episode + 1))
+            self.logger.info('Starting episode: {} of MC estimation phase'.format(episode + 1))
             
             # Re-initialize classification head weights at start of each episode 
             classification_head = self.classifier.reinitialize_classification_head(classification_head)  
@@ -182,8 +186,9 @@ class TrainingValueNet:
         training_subset: tv_net.dataset.Dataset
             subset of training set which were used in the MC estimation phase
         """
+        self.logger.info('Training Training-ValueNets - weights will be saved in: {}'.format(self.log_dir))
         for class_name, tv_net in self.tv_nets.items():
-            logging.info('Starting training Training-ValueNet for class: {}'.format(class_name))
+            self.logger.info('Starting training Training-ValueNet for class: {}'.format(class_name))
 
             # Get a list of features for all examples in this class
             features = [example.feature_vector for example in training_subset.items if example.class_name == class_name]
@@ -199,8 +204,7 @@ class TrainingValueNet:
             val_split = self.config.TVNET_VAL_SPLIT
             batch_size = self.config.TVNET_BATCH_SIZE
             epochs = self.config.TVNET_EPOCHS
-            # TODO make sub-dir for these models
-            checkpoint_path = os.path.join(self.config.OUTPUT_DIR, 'tvnet_{}'.format(class_name))
+            checkpoint_path = os.path.join(self.log_dir, 'tvnet_{}'.format(class_name))
 
             callbacks = [
                 ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_loss', mode='auto',
@@ -210,7 +214,7 @@ class TrainingValueNet:
             ]
 
             tv_net.fit(features_array, targets_array, epochs=epochs, batch_size=batch_size, callbacks=callbacks, validation_split=val_split)
-            logging.info('Finished training Training-ValueNet for class {}'.format(class_name))
+            self.logger.info('Finished training Training-ValueNet for class {}'.format(class_name))
 
     def predict_training_values(self, dataset_object):
         """
@@ -231,6 +235,14 @@ class TrainingValueNet:
             for idx, item in enumerate(class_items):
                 item.predicted_tv = predictions_array[idx][0]
 
+    def _set_log_dir(self):
+        # Directory for training logs
+        self.log_dir = os.path.join(self.config.OUTPUT_DIR, 'training_value_networks')
+        if not os.path.isdir(self.log_dir):
+            os.mkdir(self.log_dir)
+
+        # Path to save after each epoch. Epoch placeholder gets filled by Keras in ModelCheckpoint Callback
+        self.__checkpoint_path = os.path.join(self.log_dir, 'best_checkpoint.h5')
 
 
 

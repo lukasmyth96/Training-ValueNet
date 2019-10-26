@@ -25,6 +25,7 @@ from keras.applications.mobilenet import MobileNet
 from keras.applications.mobilenet import preprocess_input as mobilenet_preprocess_input
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
+from tv_net.utils.common import create_logger
 
 class Classifier:
     """
@@ -39,10 +40,11 @@ class Classifier:
         """
         # TODO do some checks on the config here
         self.config = config
+        self.logger = create_logger(config.LOG_PATH)
 
         # build feature extractor and classifier and compile
         self.feature_extractor = self._build_feature_extractor()
-        self.classification_head = self._build_classication_head()
+        self.classification_head = self._build_classification_head()
         # Store initial weights to randomly re-initialize during MC estimation phase
         self.classification_head_init_weights = self.classification_head.get_weights()
         self._set_log_dir()
@@ -140,7 +142,7 @@ class Classifier:
         feature_extractor = Model(inputs=input_layer, outputs=feature_vector)
         return feature_extractor
 
-    def _build_classication_head(self):
+    def _build_classification_head(self):
         """
         Build keras model for underlying classifier
         The classifier should be a small MLP that sits on top of the feature extractor
