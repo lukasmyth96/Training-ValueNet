@@ -20,7 +20,7 @@ class Config:
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
     NUM_CLASSES = 2
-    CLASSES_TO_USE = ['airliner', 'helicopter']
+    CLASSES_TO_USE = ['airliner', 'helicoopter']
     IMG_DIMS = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
@@ -33,18 +33,17 @@ class Config:
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
     # Training baseline model
-    BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
+    BASELINE_CLF_EPOCHS = 2  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
     BASELINE_EARLY_STOP_PATIENCE = 1
     BASLINE_EARLY_STOP_MIN_DELTA = 0.01
-    BASELINE_CLF_OPTIMIZER = 'adam'
-    BASELINE_CLF_LR = 0.001
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 50
-    VAL_SUBSET_NUM_PER_CLASS = 10
-    MC_EPISODES = 2
-    MC_EPOCHS = 2
+    TRAIN_SUBSET_NUM_PER_CLASS = 1000
+    VAL_SUBSET_NUM_PER_CLASS = 50
+    MC_EPISODES = 50
+    MC_EPOCHS = 1
+    MC_LR = 0.001
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100

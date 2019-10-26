@@ -67,6 +67,9 @@ class Dataset:
 
         # override list of class names if a subset to use is specified
         if self.config.CLASSES_TO_USE is not None:
+            if not set(self.config.CLASSES_TO_USE).issubset(class_names):
+                rogue_classes = set(self.config.CLASSES_TO_USE) - set(class_names)
+                raise ValueError('Specified classes to use not found: {}'.format(rogue_classes))
             class_names = self.config.CLASSES_TO_USE
             self.logger.info('Using following subset of classes: {}'.format(class_names))
 

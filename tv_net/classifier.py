@@ -44,7 +44,7 @@ class Classifier:
 
         # build feature extractor and classifier and compile
         self.feature_extractor = self._build_feature_extractor()
-        self.classification_head = self._build_classification_head()
+        self.classification_head = self.build_classification_head()
         # Store initial weights to randomly re-initialize during MC estimation phase
         self.classification_head_init_weights = self.classification_head.get_weights()
         self._set_log_dir()
@@ -69,8 +69,8 @@ class Classifier:
         output_layer = self.classification_head(self.feature_extractor(input_layer))
         baseline_model = Model(inputs=input_layer, outputs=output_layer)
         
-        # Compile
-        self.compile_classifier(baseline_model)
+        # Compile - using default adam optimizer for now
+        baseline_model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
 
         # Train and Val batch generators
         batch_size = self.config.BASELINE_CLF_BATCH_SIZE
@@ -142,7 +142,7 @@ class Classifier:
         feature_extractor = Model(inputs=input_layer, outputs=feature_vector)
         return feature_extractor
 
-    def _build_classification_head(self):
+    def build_classification_head(self):
         """
         Build keras model for underlying classifier
         The classifier should be a small MLP that sits on top of the feature extractor
@@ -155,11 +155,6 @@ class Classifier:
         softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(input_layer)
         classification_head = Model(inputs=input_layer, outputs=softmax_layer)
         return classification_head
-    
-    def compile_classifier(self, model):
-        """ Compile classification model"""
-        optimizer = SGD(lr=self.config.BASELINE_CLF_LR)
-        model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
     
     def reinitialize_classification_head(self, classification_head):
         """ Approximation of randomly reinitializing weights of classification head

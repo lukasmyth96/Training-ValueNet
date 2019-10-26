@@ -13,6 +13,7 @@ import os
 
 from tqdm import tqdm
 
+from keras.optimizers import SGD
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping
@@ -132,8 +133,9 @@ class TrainingValueNet:
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
         
         # Compile classification head
-        classification_head = self.classifier._build_classification_head()
-        self.classifier.compile_classifier(classification_head)
+        classification_head = self.classifier.build_classification_head()
+        optimizer = SGD(lr=self.config.MC_LR)
+        classification_head.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
         
         for episode in range(self.config.MC_EPISODES):
             self.logger.info('Starting episode: {} of MC estimation phase'.format(episode + 1))
