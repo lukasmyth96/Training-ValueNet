@@ -26,6 +26,8 @@ from keras.applications.mobilenet import preprocess_input as mobilenet_preproces
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
 from tv_net.utils.common import create_logger
+from tv_net.utils.visualize import plot_training_history
+
 
 class Classifier:
     """
@@ -108,7 +110,7 @@ class Classifier:
             use_multiprocessing=False, )
 
         # Visualize training
-
+        plot_training_history(history)
 
     def compute_loss_on_dataset_object(self, classification_head, dataset_object):
         """
