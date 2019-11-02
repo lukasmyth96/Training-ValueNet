@@ -14,6 +14,7 @@ from tv_net.utils.common import create_logger
 from tv_net.config import Config
 from tv_net.dataset import Dataset
 from tv_net.utils.common import pickle_save
+from tv_net.utils.configuration_checks import check_configuration
 from tv_net.training_value_network import TrainingValueNet
 from tv_net.utils.visualize import tsne_visualization, produce_tv_histograms
 
