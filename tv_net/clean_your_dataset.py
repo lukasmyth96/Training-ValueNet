@@ -22,6 +22,7 @@ if __name__ == '__main__':
 
     # Instantiate config object
     config = Config()
+    check_configuration(config)  # check that config is valid
 
     # Create output dir
     if not os.path.isdir(config.OUTPUT_DIR):
@@ -35,9 +36,6 @@ if __name__ == '__main__':
     # Load train and val dataset objects
     train_dataset = Dataset(config, subset='train')
     val_dataset = Dataset(config, subset='val')
-
-    if not train_dataset.class_names == val_dataset.class_names:
-        raise ValueError('Mismatch between train and val class names')  # TODO should probably move all easy checks to the start
 
     # Create Training-ValueNets
     training_value_net = TrainingValueNet(config)
