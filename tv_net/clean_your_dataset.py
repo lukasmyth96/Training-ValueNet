@@ -32,6 +32,8 @@ if __name__ == '__main__':
     # Set up logger
     logger = create_logger(config.LOG_PATH)
 
+    logger.info(' \n Starting Label Cleaning Process - Output will be saved to {}'.format(config.OUTPUT_DIR))
+
     # Load train and val dataset objects
     train_dataset = Dataset(config, subset='train')
     val_dataset = Dataset(config, subset='val')
@@ -60,12 +62,12 @@ if __name__ == '__main__':
     if config.PRODUCE_TV_HISTOGRAM:
         produce_tv_histograms(train_dataset)
 
-    # For now just save the objects
-    pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
-
     # Evaluate detections
     precision, recall = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
-    
+    logger.info('Final Results: \n '
+                'Precision: {} \n'
+                'Recall: {}'.format(precision, recall))
+
     # Copy images into clean and dirty folders - TODO This should move to it's own function
     clean_dir = os.path.join(config.OUTPUT_DIR, 'clean_training_examples')
     os.mkdir(clean_dir)
@@ -86,3 +88,6 @@ if __name__ == '__main__':
             dest = os.path.join(dirty_dir, item.class_name, new_filename) 
 
         shutil.copy(item.filepath, dest)
+
+    # # For now just save the objects
+    # pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)

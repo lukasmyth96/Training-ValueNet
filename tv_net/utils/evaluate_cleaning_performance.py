@@ -51,8 +51,7 @@ def evaluate_cleaning_performance(evaluation_dir, dataset_object):
                                           'true_negative',
                                           'false_positive',
                                           'false_negative',
-                                          'predicted_mislabeled',
-                                          'tv'])
+                                          'predicted_tv'])
 
     for class_name in dataset_object.class_names:
 

@@ -17,7 +17,7 @@ class Config:
 
     TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/train'  # directory containing weakly-labeled training data
     VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
-    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/evaluation'
+    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/evaluation'
 
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     OUTPUT_DIR = os.path.join('/home/ubuntu/results_store/training_value_net/experiment_01', timestamp)  # directory to store all output from algorithm
@@ -37,16 +37,16 @@ class Config:
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
     # Training baseline model
-    BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
+    BASELINE_CLF_EPOCHS = 2  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
     BASELINE_EARLY_STOP_PATIENCE = 1
     BASLINE_EARLY_STOP_MIN_DELTA = 0.01
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 100
-    VAL_SUBSET_NUM_PER_CLASS = 10
-    MC_EPISODES = 2
-    MC_EPOCHS = 2
+    TRAIN_SUBSET_NUM_PER_CLASS = 500
+    VAL_SUBSET_NUM_PER_CLASS = 50
+    MC_EPISODES = 50
+    MC_EPOCHS = 1
     MC_LR = 0.001
 
     # Training-ValueNet architecture

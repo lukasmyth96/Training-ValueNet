@@ -133,7 +133,8 @@ class TrainingValueNet:
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
 
         # Build features array and labels for validation set to compute loss at each time-step
-        val_features, val_labels = self.classifier.batch_generator(val_subset, shuffle=False, batch_size=val_subset.num_examples)
+        val_features = np.array([item.feature_vector for item in val_subset.items])
+        val_labels = np.stack(val_subset.class_names_to_one_hot[item.class_name] for item in val_subset.items)
         
         # Build and compile classification head
         classification_head = self.classifier.build_classification_head()
@@ -177,7 +178,7 @@ class TrainingValueNet:
 
         # Now compute estimate of training-value for each example in the training subset
         # This is simply the mean immediate improvement in loss that was observed when that example was trained on
-        for item in train_dataset.items:
+        for item in train_subset.items:
             item.estimated_tv = np.mean(item.tv_point_estimates)
 
         return train_subset

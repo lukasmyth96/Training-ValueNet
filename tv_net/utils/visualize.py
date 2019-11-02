@@ -69,22 +69,23 @@ def plot_training_history(history):
     history: keras.callbacks.History
         keras history object
     """
+    epochs = list(range(1, len(history.history['acc']) + 1))
     # Plot training & validation accuracy values
     fig, ax = plt.subplots()
-    ax.plot(history.history['acc'])
-    ax.plot(history.history['val_acc'])
-    ax.title('Model accuracy')
-    ax.ylabel('Accuracy')
-    ax.xlabel('Epoch')
-    ax.legend(['Train', 'Test'], loc='upper left')
+    ax.plot(epochs, history.history['acc'])
+    ax.plot(epochs, history.history['val_acc'])
+    ax.set_title('Model accuracy')
+    ax.set_ylabel('Accuracy')
+    ax.set_xlabel('Epoch')
+    ax.legend(['Train', 'Val'], loc='upper left')
     plt.show()
 
     # Plot training & validation loss values
     fig, ax = plt.subplots()
-    ax.plot(history.history['loss'])
-    ax.plot(history.history['val_loss'])
-    ax.title('Model loss')
-    ax.ylabel('Loss')
-    ax.xlabel('Epoch')
-    ax.legend(['Train', 'Test'], loc='upper left')
+    ax.plot(epochs, history.history['loss'])
+    ax.plot(epochs, history.history['val_loss'])
+    ax.set_title('Model loss')
+    ax.set_ylabel('Loss')
+    ax.set_xlabel('Epoch')
+    ax.legend(['Train', 'Val'], loc='upper left')
     plt.show()
