@@ -9,6 +9,7 @@ Written by Luka Smyth
 
 import os
 
+
 class Config:
 
     NAME = 'example'
@@ -20,7 +21,7 @@ class Config:
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
     NUM_CLASSES = 2
-    CLASSES_TO_USE = ['glider', 'propeller']
+    CLASSES_TO_USE = ['glider', 'propeller']  # Specify subset to use - set to None to use all
     IMG_DIMS = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
