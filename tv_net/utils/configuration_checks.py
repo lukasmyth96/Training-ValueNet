@@ -30,9 +30,9 @@ def check_configuration(config):
 
         # Check NUM_CLASSES is same number as CLASSES_TO_USE
         if len(config.CLASSES_TO_USE) != config.NUM_CLASSES:
-            raise ValueError('Configuration Error: \n'
+            raise ValueError('Configuration Error: class num mismatch \n'
                              'NUM_CLASSES: {} \n'
-                             'CLASSES_TO_USE: {}'.format(config.NUM_CLASSES, len(config.CLASSES_TO_USE)))
+                             'CLASSES_TO_USE: {}'.format(config.NUM_CLASSES, config.CLASSES_TO_USE))
 
     else:
 

@@ -8,6 +8,7 @@ Written by Luka Smyth
 """
 
 import os
+from datetime import datetime
 
 
 class Config:
@@ -16,8 +17,10 @@ class Config:
 
     TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/train'  # directory containing weakly-labeled training data
     VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
+    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/evaluation'
 
-    OUTPUT_DIR = '/home/ubuntu/results_store/training_value_net/experiment_01'  # directory to store all output from algorithm
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    OUTPUT_DIR = os.path.join('/home/ubuntu/results_store/training_value_net/experiment_01', timestamp)  # directory to store all output from algorithm
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
     NUM_CLASSES = 2
@@ -40,9 +43,9 @@ class Config:
     BASLINE_EARLY_STOP_MIN_DELTA = 0.01
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 1000
-    VAL_SUBSET_NUM_PER_CLASS = 100
-    MC_EPISODES = 50
+    TRAIN_SUBSET_NUM_PER_CLASS = 100
+    VAL_SUBSET_NUM_PER_CLASS = 10
+    MC_EPISODES = 2
     MC_EPOCHS = 2
     MC_LR = 0.001
 

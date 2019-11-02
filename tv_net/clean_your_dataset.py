@@ -17,6 +17,7 @@ from tv_net.utils.common import pickle_save
 from tv_net.utils.configuration_checks import check_configuration
 from tv_net.training_value_network import TrainingValueNet
 from tv_net.utils.visualize import tsne_visualization, produce_tv_histograms
+from tv_net.utils.evaluate_cleaning_performance import evaluate_cleaning_performance
 
 if __name__ == '__main__':
 
@@ -25,10 +26,8 @@ if __name__ == '__main__':
     check_configuration(config)  # check that config is valid
 
     # Create output dir
-    if not os.path.isdir(config.OUTPUT_DIR):
-        os.makedirs(config.OUTPUT_DIR)
-    if not os.path.isdir(os.path.join(config.OUTPUT_DIR, 'visualizations')):
-        os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
+    os.makedirs(config.OUTPUT_DIR)
+    os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
 
     # Set up logger
     logger = create_logger(config.LOG_PATH)
@@ -63,6 +62,9 @@ if __name__ == '__main__':
 
     # For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
+
+    # Evaluate detections
+    precision, recall = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
     
     # Copy images into clean and dirty folders - TODO This should move to it's own function
     clean_dir = os.path.join(config.OUTPUT_DIR, 'clean_training_examples')
