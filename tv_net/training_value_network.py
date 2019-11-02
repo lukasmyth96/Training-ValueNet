@@ -131,6 +131,9 @@ class TrainingValueNet:
         # Get random subset of train and val to estimate on
         train_subset = get_random_subset(train_dataset, self.config.TRAIN_SUBSET_NUM_PER_CLASS)
         val_subset = get_random_subset(val_dataset, self.config.VAL_SUBSET_NUM_PER_CLASS)
+
+        # Build features array and labels for validation set to compute loss at each time-step
+        val_features, val_labels = self.classifier.batch_generator(val_subset, shuffle=False, batch_size=val_subset.num_examples)
         
         # Build and compile classification head
         classification_head = self.classifier.build_classification_head()
@@ -147,10 +150,9 @@ class TrainingValueNet:
             train_subset.shuffle_examples()  
             
             # Compute and store initial validation loss
-            val_losses = list()  # Create list to store val losses
-            val_losses.append(self.classifier.compute_loss_on_dataset_object(classification_head, val_subset))  # append initial val loss
+            initial_val_loss = classification_head.evaluate(val_features, val_labels, batch_size=self.config.EVAL_BATCH_SIZE, verbose=0)[0]
+            val_loss_history = [initial_val_loss]  # create list to store val losses
 
-            iteration = 0
             for iteration in tqdm(range(self.config.MC_EPOCHS * train_subset.num_examples)):
 
                 # Get next item to train on
@@ -164,14 +166,14 @@ class TrainingValueNet:
                 classification_head.train_on_batch(feature_vector, one_hot_label)
 
                 # Compute immediate improvement in val loss
-                new_val_loss = self.classifier.compute_loss_on_dataset_object(classification_head, val_subset)
-                loss_improvement = val_losses[-1] - new_val_loss
+                new_val_loss = classification_head.evaluate(val_features, val_labels, batch_size=self.config.EVAL_BATCH_SIZE, verbose=0)[0]
+                loss_improvement = val_loss_history[-1] - new_val_loss
 
-                # store loss improvement in the data item
+                # Update list of training-value point estimates for this example
                 item.tv_point_estimates.append(loss_improvement)
 
-                # Updates
-                val_losses.append(new_val_loss)
+                # Update val loss history
+                val_loss_history.append(new_val_loss)
 
         # Now compute estimate of training-value for each example in the training subset
         # This is simply the mean immediate improvement in loss that was observed when that example was trained on
@@ -200,22 +202,23 @@ class TrainingValueNet:
             targets = [example.estimated_tv for example in training_subset.items if example.class_name == class_name]
             targets_array = np.array(targets)
 
-            # Get configs
-            early_stop_patience = self.config.TVNET_EARLY_STOP_PATIENCE
-            early_stop_delta = self.config.TVNET_EARLY_STOP_MIN_DELTA
-            val_split = self.config.TVNET_VAL_SPLIT
-            batch_size = self.config.TVNET_BATCH_SIZE
-            epochs = self.config.TVNET_EPOCHS
+            # Set up callbacks
             checkpoint_path = os.path.join(self.log_dir, 'tvnet_{}'.format(class_name))
-
             callbacks = [
                 ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_loss', mode='auto',
                                 save_weights_only=True, save_best_only=True),
-                EarlyStopping(monitor='val_loss', min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
-                              mode='auto', restore_best_weights=True)
-            ]
+                EarlyStopping(monitor='val_loss',
+                              min_delta=self.config.TVNET_EARLY_STOP_MIN_DELTA,
+                              patience=self.config.TVNET_EARLY_STOP_PATIENCE,
+                              restore_best_weights=True,
+                              mode='auto',
+                              verbose=1)]
 
-            tv_net.fit(features_array, targets_array, epochs=epochs, batch_size=batch_size, callbacks=callbacks, validation_split=val_split)
+            tv_net.fit(features_array, targets_array,
+                       epochs=self.config.TVNET_EPOCHS,
+                       batch_size=self.config.TVNET_BATCH_SIZE,
+                       callbacks=callbacks,
+                       validation_split=self.config.TVNET_VAL_SPLIT)
             self.logger.info('Finished training Training-ValueNet for class {}'.format(class_name))
 
     def predict_training_values(self, dataset_object):

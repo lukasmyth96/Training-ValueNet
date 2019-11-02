@@ -65,7 +65,7 @@ if __name__ == '__main__':
     # For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
     
-    # Copy images into clean and dirty folders - This should move to it's own function
+    # Copy images into clean and dirty folders - TODO This should move to it's own function
     clean_dir = os.path.join(config.OUTPUT_DIR, 'clean_training_examples')
     os.mkdir(clean_dir)
     dirty_dir = os.path.join(config.OUTPUT_DIR, 'dirty_training_examples')

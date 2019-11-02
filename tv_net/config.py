@@ -28,7 +28,7 @@ class Config:
 
     # Visualizations
     PRODUCE_TSNE = True  # If True a TSNE visualization will be produced of the feature vectors after baseline training
-    TSNE_NUM_EXAMPLES = 1000  # Number of examples to include in T-SNE
+    TSNE_NUM_EXAMPLES = 1000  # Number of examples to include in T-SNE (to keep run-time reasonable)
 
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 

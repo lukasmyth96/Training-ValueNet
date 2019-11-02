@@ -112,31 +112,6 @@ class Classifier:
         # Visualize training
         plot_training_history(history)
 
-    def compute_loss_on_dataset_object(self, classification_head, dataset_object):
-        """
-        Compute loss of classification head on dataset object
-        This assumes that feature vectors have already been extracted for all items in dataset object
-        Parameters
-        ----------
-        classification_head: keras.engine.training.Model
-        dataset_object: tv_net.dataset.Dataset
-        Returns
-        -------
-        loss: float
-        """
-        # TODO find way to break down evaluation into multiple steps
-        batch_size = self.config.EVAL_BATCH_SIZE
-        
-        features_list = [item.feature_vector for item in dataset_object.items]
-        features_array = np.array(features_list)
-        
-        label_list = [item.class_name for item in dataset_object.items]
-        class_one_hot_list = [dataset_object.class_names_to_one_hot[label] for label in label_list]
-        labels_array = np.stack(class_one_hot_list, axis=0)
-        
-        loss = classification_head.evaluate(features_array, labels_array, batch_size=batch_size, verbose=0)[0] 
-        return loss
-
     def _build_feature_extractor(self):
         """
         Build keras model for feature extractor - using pre-trained mobilenet_v2 here because it is fast to train
