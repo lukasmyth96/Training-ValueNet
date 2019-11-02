@@ -6,6 +6,7 @@ Script to clean dataset
 Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
+
 import os
 import shutil
 from tqdm import tqdm
@@ -18,6 +19,7 @@ from tv_net.utils.configuration_checks import check_configuration
 from tv_net.training_value_network import TrainingValueNet
 from tv_net.utils.visualize import tsne_visualization, produce_tv_histograms
 from tv_net.utils.evaluate_cleaning_performance import evaluate_cleaning_performance
+
 
 if __name__ == '__main__':
 
@@ -62,12 +64,6 @@ if __name__ == '__main__':
     if config.PRODUCE_TV_HISTOGRAM:
         produce_tv_histograms(train_dataset)
 
-    # Evaluate detections
-    precision, recall = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
-    logger.info('Final Results: \n '
-                'Precision: {} \n'
-                'Recall: {}'.format(precision, recall))
-
     # Copy images into clean and dirty folders - TODO This should move to it's own function
     clean_dir = os.path.join(config.OUTPUT_DIR, 'clean_training_examples')
     os.mkdir(clean_dir)
@@ -89,5 +85,13 @@ if __name__ == '__main__':
 
         shutil.copy(item.filepath, dest)
 
+    # Evaluate detections
+    precision, recall = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
+    logger.info('Final Results: \n '
+                'Precision: {} \n'
+                'Recall: {}'.format(precision, recall))
+
     # # For now just save the objects
-    # pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
+
+

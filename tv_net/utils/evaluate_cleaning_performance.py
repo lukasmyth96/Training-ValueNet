@@ -70,7 +70,7 @@ def evaluate_cleaning_performance(evaluation_dir, dataset_object):
                                                       'true_negative': not is_mislabeled and not predicted_mislabeled,
                                                       'false_positive': not is_mislabeled and predicted_mislabeled,
                                                       'false_negative': is_mislabeled and not predicted_mislabeled,
-                                                      'predicted_tv': item.predicted_tv})
+                                                      'predicted_tv': item.predicted_tv}, ignore_index=True)
 
     true_positives = sum(evaluation_df[evaluation_df.true_positive])
     false_positives = sum(evaluation_df[evaluation_df.false_positive])

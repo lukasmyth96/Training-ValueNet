@@ -7,9 +7,11 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
 import copy
+from datetime import timedelta
 import math
 import numpy as np
 import os
+import time
 
 from tqdm import tqdm
 
@@ -140,7 +142,8 @@ class TrainingValueNet:
         classification_head = self.classifier.build_classification_head()
         optimizer = SGD(lr=self.config.MC_LR)
         classification_head.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-        
+
+        start_time = time.time()
         for episode in range(self.config.MC_EPISODES):
             self.logger.info('Starting episode: {} of MC estimation phase'.format(episode + 1))
             
@@ -180,6 +183,8 @@ class TrainingValueNet:
         # This is simply the mean immediate improvement in loss that was observed when that example was trained on
         for item in train_subset.items:
             item.estimated_tv = np.mean(item.tv_point_estimates)
+        end_time = time.time()
+        self.logger.info('MC estimation phase completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
 
         return train_subset
 

@@ -10,11 +10,11 @@ Classifier class encapsulates all functionality for underlying classifier.
 Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
-import copy
-import datetime
+from datetime import timedelta
 import math
 import os
 import random
+import time
 
 import numpy as np
 
@@ -97,6 +97,7 @@ class Classifier:
         train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
+        start_time = time.time()
         history = baseline_model.fit_generator(
             train_generator,
             initial_epoch=0,
@@ -108,7 +109,8 @@ class Classifier:
             max_queue_size=100,
             workers=1,
             use_multiprocessing=False, )
-
+        end_time = time.time()
+        self.logger.info('Baseline training completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
         # Visualize training
         plot_training_history(history)
 

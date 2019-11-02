@@ -37,17 +37,17 @@ class Config:
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
     # Training baseline model
-    BASELINE_CLF_EPOCHS = 2  # set to a large number as early stopping should prevent overfitting
+    BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
     BASELINE_EARLY_STOP_PATIENCE = 1
     BASLINE_EARLY_STOP_MIN_DELTA = 0.01
 
     # Monte-Carlo estimation phase
-    TRAIN_SUBSET_NUM_PER_CLASS = 500
-    VAL_SUBSET_NUM_PER_CLASS = 50
-    MC_EPISODES = 50
+    TRAIN_SUBSET_NUM_PER_CLASS = 1000
+    VAL_SUBSET_NUM_PER_CLASS = 100
+    MC_EPISODES = 100
     MC_EPOCHS = 1
-    MC_LR = 0.001
+    MC_LR = 0.0005
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100
