@@ -9,7 +9,6 @@ Written by Luka Smyth
 
 import copy
 import logging
-import ntpath
 import os
 import random
 import re
@@ -21,7 +20,9 @@ from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.utils import to_categorical
 
-from tv_net.utils.common import create_logger
+from tv_net.utils.common import pickle_save
+
+module_logger = logging.getLogger('main_app.Dataset')
 
 
 class Dataset:
@@ -29,7 +30,6 @@ class Dataset:
 
         self.subset = subset
         self.config = config
-        self.logger = create_logger(config.LOG_PATH)
         assert subset in ['train', 'val', 'test']
 
         self.items = []
@@ -61,10 +61,10 @@ class Dataset:
             .
             etc.
         """
-        self.logger.info('Loading data from: {}'.format(self.dataset_dir))
+        module_logger.info('Loading data from: {}'.format(self.dataset_dir))
         class_names = [directory for directory in os.listdir(self.dataset_dir)]
         class_names.sort()
-        self.logger.info('Found following class names: {}'.format(class_names))
+        module_logger.info('Found following class names: {}'.format(class_names))
 
         # override list of class names if a subset to use is specified
         if self.config.CLASSES_TO_USE is not None:
@@ -72,13 +72,13 @@ class Dataset:
                 rogue_classes = set(self.config.CLASSES_TO_USE) - set(class_names)
                 raise ValueError('Specified classes to use not found: {}'.format(rogue_classes))
             class_names = self.config.CLASSES_TO_USE
-            self.logger.info('Using following subset of classes: {}'.format(class_names))
+            module_logger.info('Using following subset of classes: {}'.format(class_names))
 
         self._add_classes(class_names)
-        self.logger.info('Loading dataset with following class names: {}'.format(self.class_names))
-        time.sleep(0.2) # gives time for self.logger.info before progress bar appears
+        module_logger.info('Loading dataset with following class names: {}'.format(self.class_names))
+        time.sleep(0.2) # gives time for module_logger.info before progress bar appears
         for class_name in class_names:
-            self.logger.info('Loading class: {}...'.format(class_name))
+            module_logger.info('Loading class: {}...'.format(class_name))
             class_dir = os.path.join(self.dataset_dir, class_name)
             filename_list = [f for f in os.listdir(class_dir)]
             filename_list.sort()
@@ -137,6 +137,13 @@ class Dataset:
         Randomly shuffle list of data items
         """
         random.shuffle(self.items)
+
+    def save_dataset(self):
+
+        attributes_dict = vars(self)
+        output_path = os.path.join(self.config.OUTPUT_DIR, '{}_dataset_object.pkl')
+        pickle_save(output_path, attributes_dict)
+        module_logger.info('Dataset object saved to:  {}'.format(output_path))
 
 
 def get_random_subset(dataset_object, num_examples_per_class):

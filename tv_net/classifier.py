@@ -11,6 +11,7 @@ Licensed under the MIT License (see LICENSE for details)
 Written by Luka Smyth
 """
 from datetime import timedelta
+import logging
 import math
 import os
 import random
@@ -25,8 +26,9 @@ from keras.applications.mobilenet import MobileNet
 from keras.applications.mobilenet import preprocess_input as mobilenet_preprocess_input
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
-from tv_net.utils.common import create_logger
 from tv_net.utils.visualize import plot_training_history
+
+module_logger = logging.getLogger('main_app.Classifier')
 
 
 class Classifier:
@@ -42,7 +44,6 @@ class Classifier:
         """
         # TODO do some checks on the config here
         self.config = config
-        self.logger = create_logger(config.LOG_PATH)
 
         # build feature extractor and classifier and compile
         self.feature_extractor = self._build_feature_extractor()
@@ -111,7 +112,7 @@ class Classifier:
             workers=1,
             use_multiprocessing=False, )
         end_time = time.time()
-        self.logger.info('Baseline training completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
+        module_logger.info('Baseline training completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
         # Visualize training
         plot_training_history(history)
 

@@ -8,6 +8,7 @@ Written by Luka Smyth
 """
 import copy
 from datetime import timedelta
+import logging
 import math
 import numpy as np
 import os
@@ -20,9 +21,10 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
-from tv_net.utils.common import create_logger
 from tv_net.classifier import Classifier
 from tv_net.dataset import get_random_subset
+
+module_logger = logging.getLogger('main_app.TrainingValueNet')
 
 
 class TrainingValueNet:
@@ -38,7 +40,6 @@ class TrainingValueNet:
         """
         # TODO for missing config params at this stage
         self.config = config
-        self.logger = create_logger(config.LOG_PATH)
         self.classifier = Classifier(config)
         self.tv_nets = dict()
         self._set_log_dir()
@@ -79,7 +80,7 @@ class TrainingValueNet:
             tv_nets[class_name] = tv_net
 
         self.tv_nets = tv_nets
-        self.logger.info('Finished building Training-ValueNetworks for classes: {}'.format(class_names))
+        module_logger.info('Finished building Training-ValueNetworks for classes: {}'.format(class_names))
 
     def train_baseline_classifier(self, train_dataset, val_dataset):
         """
@@ -91,9 +92,9 @@ class TrainingValueNet:
         val_dataset: tv_net.dataset.Dataset
             validation dataset object
         """
-        self.logger.info('Training baseline classification model')
-        self.logger.info('Training on {} examples'.format(train_dataset.num_examples))
-        self.logger.info('Evaluating on {} examples'.format(val_dataset.num_examples))
+        module_logger.info('Training baseline classification model')
+        module_logger.info('Training on {} examples'.format(train_dataset.num_examples))
+        module_logger.info('Evaluating on {} examples'.format(val_dataset.num_examples))
         self.classifier.train_baseline(train_dataset, val_dataset)
 
     def extract_feature_vectors(self, dataset_object):
@@ -104,7 +105,7 @@ class TrainingValueNet:
         ----------
         dataset_object: tv_net.dataset.Dataset
         """
-        self.logger.info('Extracting feature vectors')
+        module_logger.info('Extracting feature vectors')
         batch_size = self.config.EVAL_BATCH_SIZE
         steps = math.ceil(dataset_object.num_examples / batch_size)
         # Shuffle must be False!
@@ -145,7 +146,7 @@ class TrainingValueNet:
 
         start_time = time.time()
         for episode in range(self.config.MC_EPISODES):
-            self.logger.info('Starting episode: {} of {} of the MC estimation phase'.format(episode + 1, self.config.MC_EPISODES))
+            module_logger.info('Starting episode: {} of {} of the MC estimation phase'.format(episode + 1, self.config.MC_EPISODES))
             
             # Re-initialize classification head weights at start of each episode 
             classification_head = self.classifier.reinitialize_classification_head(classification_head)  
@@ -184,7 +185,7 @@ class TrainingValueNet:
         for item in train_subset.items:
             item.estimated_tv = np.mean(item.tv_point_estimates)
         end_time = time.time()
-        self.logger.info('MC estimation phase completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
+        module_logger.info('MC estimation phase completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
 
         return train_subset
 
@@ -196,9 +197,9 @@ class TrainingValueNet:
         training_subset: tv_net.dataset.Dataset
             subset of training set which were used in the MC estimation phase
         """
-        self.logger.info('Training Training-ValueNets - weights will be saved in: {}'.format(self.log_dir))
+        module_logger.info('Training Training-ValueNets - weights will be saved in: {}'.format(self.log_dir))
         for class_name, tv_net in self.tv_nets.items():
-            self.logger.info('Starting training Training-ValueNet for class: {}'.format(class_name))
+            module_logger.info('Starting training Training-ValueNet for class: {}'.format(class_name))
 
             # Get a list of features for all examples in this class
             features = [example.feature_vector for example in training_subset.items if example.class_name == class_name]
@@ -225,7 +226,7 @@ class TrainingValueNet:
                        batch_size=self.config.TVNET_BATCH_SIZE,
                        callbacks=callbacks,
                        validation_split=self.config.TVNET_VAL_SPLIT)
-            self.logger.info('Finished training Training-ValueNet for class {}'.format(class_name))
+            module_logger.info('Finished training Training-ValueNet for class {}'.format(class_name))
 
     def predict_training_values(self, dataset_object):
         """

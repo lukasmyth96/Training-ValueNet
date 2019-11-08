@@ -11,7 +11,8 @@ import os
 import shutil
 from tqdm import tqdm
 
-from tv_net.utils.common import create_logger
+
+from tv_net.utils.common import initialise_logger
 from tv_net.config import Config
 from tv_net.dataset import Dataset
 from tv_net.utils.common import pickle_save
@@ -32,7 +33,7 @@ if __name__ == '__main__':
     os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
 
     # Set up logger
-    logger = create_logger(config.LOG_PATH)
+    logger = initialise_logger(config.LOG_PATH)
 
     logger.info(' \n Starting Label Cleaning Process - Output will be saved to {}'.format(config.OUTPUT_DIR))
 

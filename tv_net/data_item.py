@@ -1,5 +1,6 @@
 import ntpath
 
+
 class DataItem:
     def __init__(self, filepath, class_name):
         self._filepath = filepath

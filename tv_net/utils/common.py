@@ -2,7 +2,9 @@
 Various functions commonly used
 """
 from distutils.util import strtobool
+
 import logging
+import os
 import pickle
 
 
@@ -20,18 +22,30 @@ def pickle_load(filename):
     return an_object
 
 
-def create_logger(log_path):
-    """ Setup logger to filepath and stderr"""
-
-    logging.basicConfig(
-        level=logging.INFO,
-        handlers=[
-            logging.FileHandler(log_path),
-            logging.StreamHandler()
-        ])
-
-    logger = logging.getLogger()
+def initialise_logger(log_file_path=None):
+    logger = logging.getLogger('main_app')
     logger.setLevel(logging.INFO)
 
-    return logger
+    log_formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                                      datefmt="%Y-%m-%d %H:%M:%S")
 
+    # Get handler names
+    handler_names = [log_handler.name for log_handler in logger.handlers]
+
+    if ('file_handler' not in handler_names) and (log_file_path is not None):
+        # create the logging file handler
+        log_file_directory = os.path.dirname(log_file_path)
+        if not os.path.exists(log_file_directory):
+            os.makedirs(log_file_directory)
+        logger_fh = logging.FileHandler(log_file_path, encoding='utf-8')
+        logger_fh.setFormatter(log_formatter)
+        logger_fh.set_name('file_handler')
+        logger.addHandler(logger_fh)
+
+    if 'console' not in handler_names:
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(log_formatter)
+        console_handler.set_name('console')
+        logger.addHandler(console_handler)
+
+    return logger
