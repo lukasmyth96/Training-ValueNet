@@ -86,7 +86,8 @@ if __name__ == '__main__':
         shutil.copy(item.filepath, dest)
 
     # Evaluate detections
-    precision, recall = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
+    precision, recall, eval_df = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
+    eval_df.to_excel(os.path.join(config.OUTPUT_DIR, 'evaluation_df.xlsx'))
     logger.info('Final Results: \n '
                 'Precision: {} \n'
                 'Recall: {}'.format(precision, recall))

@@ -16,6 +16,7 @@ import re
 import time
 
 from tqdm import tqdm
+from tv_net.data_item import DataItem
 from keras.preprocessing.image import load_img
 from keras.preprocessing.image import img_to_array
 from keras.utils import to_categorical
@@ -136,31 +137,6 @@ class Dataset:
         Randomly shuffle list of data items
         """
         random.shuffle(self.items)
-
-
-class DataItem:
-    def __init__(self, filepath, class_name):
-        self._filepath = filepath
-        self.filename = ntpath.basename(filepath)  # npath is compatible with any os
-        self._data = None
-        self._feature_vector = None
-        self._class_name = class_name
-
-        self.tv_point_estimates = list()  # to store point estimates of training-value from the MC estimation phase
-        self.estimated_tv = None  # estimated training-value from MC estimation
-        self.predicted_tv = None  # predicted training-value from Training-ValueNet
-
-    @property
-    def filepath(self):
-        return self._filepath
-
-    @property
-    def data(self):
-        return self._data
-
-    @property
-    def class_name(self):
-        return self._class_name
 
 
 def get_random_subset(dataset_object, num_examples_per_class):

@@ -145,7 +145,7 @@ class TrainingValueNet:
 
         start_time = time.time()
         for episode in range(self.config.MC_EPISODES):
-            self.logger.info('Starting episode: {} of MC estimation phase'.format(episode + 1))
+            self.logger.info('Starting episode: {} of {} of the MC estimation phase'.format(episode + 1, self.config.MC_EPISODES))
             
             # Re-initialize classification head weights at start of each episode 
             classification_head = self.classifier.reinitialize_classification_head(classification_head)  

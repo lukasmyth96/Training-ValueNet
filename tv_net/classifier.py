@@ -94,7 +94,8 @@ class Classifier:
 
         # Training
 
-        train_steps = math.ceil(len(train_dataset.items) / batch_size)
+        train_steps = 10  # TODO delete this after debuggin
+        #train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
         start_time = time.time()

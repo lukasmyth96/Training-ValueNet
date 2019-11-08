@@ -41,6 +41,8 @@ def evaluate_cleaning_performance(evaluation_dir, dataset_object):
         The precision in detecting mislabelled examples
     recall: float
         The recall in detecting mislabelled examples
+    evaluation_df: pandas.core.frame.DataFrame
+        one row for each example in the eval set
     """
 
     # TODO we should start with some checks on the input
@@ -72,13 +74,13 @@ def evaluate_cleaning_performance(evaluation_dir, dataset_object):
                                                       'false_negative': is_mislabeled and not predicted_mislabeled,
                                                       'predicted_tv': item.predicted_tv}, ignore_index=True)
 
-    true_positives = sum(evaluation_df[evaluation_df.true_positive])
-    false_positives = sum(evaluation_df[evaluation_df.false_positive])
-    false_negatives = sum(evaluation_df[evaluation_df.false_negative])
+    true_positives = len(evaluation_df[evaluation_df.true_positive])
+    false_positives = len(evaluation_df[evaluation_df.false_positive])
+    false_negatives = len(evaluation_df[evaluation_df.false_negative])
 
     precision = true_positives / (true_positives + false_positives)
     recall = true_positives / (true_positives + false_negatives)
 
-    return precision, recall
+    return precision, recall, evaluation_df
 
 
