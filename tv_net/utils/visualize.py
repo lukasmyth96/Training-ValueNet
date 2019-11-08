@@ -52,7 +52,7 @@ def produce_tv_histograms(dataset_object):
 
         # Plot and save
         fig, ax = plt.subplots()
-        ax.hist(class_predicted_tvs, bins=100)
+        ax.hist(class_predicted_tvs, bins=100, range=(-0.2, 0.2))
         fig.text(0.1, 0.8, 'Dirty Examples: {}'.format(len([val for val in class_predicted_tvs if val < 0])), ha='left')
         fig.text(0.9, 0.8, 'Clean Examples: {}'.format(len([val for val in class_predicted_tvs if val > 0])), ha='right')
         ax.axvline(0, color='red', linestyle='dashed', linewidth=2)  # to mark threshold between clean and dirty ex

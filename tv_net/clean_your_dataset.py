@@ -32,10 +32,10 @@ if __name__ == '__main__':
     os.makedirs(config.OUTPUT_DIR)
     os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
 
-    # Set up logger
-    logger = initialise_logger(config.LOG_PATH)
+    # Set up module_logger
+    module_logger = initialise_logger(config.LOG_PATH)
 
-    logger.info(' \n Starting Label Cleaning Process - Output will be saved to {}'.format(config.OUTPUT_DIR))
+    module_logger.info(' \n Starting Label Cleaning Process - Output will be saved to {}'.format(config.OUTPUT_DIR))
 
     # Load train and val dataset objects
     train_dataset = Dataset(config, subset='train')
@@ -56,7 +56,6 @@ if __name__ == '__main__':
 
     # Monte-Carlo Estimation Phase
     train_subset = training_value_net.mc_estimation_phase(train_dataset, val_dataset)
-    # TODO figure out why there is a 'Mean of empty slice.' warning at end of above line running
     # Training each Training-ValueNet on the estimates from the MC estimation phase
     training_value_net.train_tv_nets(train_subset)
 
@@ -89,11 +88,11 @@ if __name__ == '__main__':
     # Evaluate detections
     precision, recall, eval_df = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
     eval_df.to_excel(os.path.join(config.OUTPUT_DIR, 'evaluation_df.xlsx'))
-    logger.info('Final Results: \n '
-                'Precision: {} \n'
-                'Recall: {}'.format(precision, recall))
+    module_logger.info('Final Results: \n '
+                       'Precision: {} \n'
+                       'Recall: {}'.format(precision, recall))
 
-    # # For now just save the objects
+    #  For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
 
 

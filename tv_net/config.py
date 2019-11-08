@@ -23,8 +23,8 @@ class Config:
     OUTPUT_DIR = os.path.join('/home/ubuntu/results_store/training_value_net/experiment_01', timestamp)  # directory to store all output from algorithm
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
-    NUM_CLASSES = 2
-    CLASSES_TO_USE = ['glider', 'propeller']  # Specify subset to use - set to None to use all
+    NUM_CLASSES = 3
+    CLASSES_TO_USE = ['glider', 'propeller', 'sea_plane']  # Specify subset to use - set to None to use all
     IMG_DIMS = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
@@ -32,22 +32,27 @@ class Config:
 
     # Visualizations
     PRODUCE_TSNE = True  # If True a TSNE visualization will be produced of the feature vectors after baseline training
-    TSNE_NUM_EXAMPLES = 1000  # Number of examples to include in T-SNE (to keep run-time reasonable)
+    TSNE_NUM_EXAMPLES = 3000  # Number of examples to include in T-SNE (to keep run-time reasonable)
 
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
     # Training baseline model
     BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
-    BASELINE_EARLY_STOP_PATIENCE = 1
-    BASLINE_EARLY_STOP_MIN_DELTA = 0.01
+    BASELINE_CLF_LR = 0.001
+    BASELINE_CLF_LR_DECAY = 1e-4
+    BASELINE_CLF_MOMENTUM = 0.9
+    BASELINE_CLF_NESTEROV = True
+    BASELINE_EARLY_STOP_PATIENCE = 3
+    BASELINE_EARLY_STOP_METRIC = 'val_acc'  # which metric to use for early stopping - 'val_loss' or 'val_acc'
+    BASELINE_EARLY_STOP_MIN_DELTA = 0.005
 
     # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 1000
     VAL_SUBSET_NUM_PER_CLASS = 100
     MC_EPISODES = 100
     MC_EPOCHS = 1
-    MC_LR = 0.0005
+    MC_LR = 0.0001
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100

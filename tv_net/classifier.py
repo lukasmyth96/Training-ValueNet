@@ -73,7 +73,11 @@ class Classifier:
         baseline_model = Model(inputs=input_layer, outputs=output_layer)
         
         # Compile - using default adam optimizer for now
-        baseline_model.compile(loss="categorical_crossentropy", optimizer='adam', metrics=['accuracy'])
+        optimizer = SGD(lr=self.config.BASELINE_CLF_LR,
+                        decay=self.config.BASELINE_CLF_LR_DECAY,
+                        momentum=self.config.BASELINE_CLF_MOMENTUM,
+                        nesterov=self.config.BASELINE_CLF_NESTEROV)
+        baseline_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
 
         # Train and Val batch generators
         batch_size = self.config.BASELINE_CLF_BATCH_SIZE
@@ -82,21 +86,20 @@ class Classifier:
 
         # Callbacks
         early_stop_patience = self.config.BASELINE_EARLY_STOP_PATIENCE
-        early_stop_delta = self.config.BASLINE_EARLY_STOP_MIN_DELTA
+        early_stop_metric = self.config.BASELINE_EARLY_STOP_METRIC
+        early_stop_delta = self.config.BASELINE_EARLY_STOP_MIN_DELTA
         checkpoint_path = self.__checkpoint_path
 
         callbacks = [
             TensorBoard(log_dir=self.log_dir, histogram_freq=0, write_graph=True, write_images=False),
             ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_acc', mode='auto',
                             save_weights_only=True, save_best_only=True),
-            EarlyStopping(monitor='val_acc', min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
+            EarlyStopping(monitor=early_stop_metric, min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
                           mode='auto', restore_best_weights=True)
         ]
 
         # Training
-
-        train_steps = 10  # TODO delete this after debuggin
-        #train_steps = math.ceil(len(train_dataset.items) / batch_size)
+        train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
         start_time = time.time()

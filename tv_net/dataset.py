@@ -138,13 +138,6 @@ class Dataset:
         """
         random.shuffle(self.items)
 
-    def save_dataset(self):
-
-        attributes_dict = vars(self)
-        output_path = os.path.join(self.config.OUTPUT_DIR, '{}_dataset_object.pkl')
-        pickle_save(output_path, attributes_dict)
-        module_logger.info('Dataset object saved to:  {}'.format(output_path))
-
 
 def get_random_subset(dataset_object, num_examples_per_class):
     """
