@@ -164,7 +164,7 @@ class TrainingValueNet:
 
             module_logger.info('Starting episode: {} of {} of the MC estimation phase'.format(episode + 1, self.config.MC_EPISODES))
 
-            if episode % 10 == 0:
+            if episode % self.config.MC_CHECKPOINT_EVERY == 0:
                 # Pickle save train subset every 10 episodes in case instance crashes  TODO make configurable
                 pickle_save(os.path.join(self.config.OUTPUT_DIR, 'train_subset.pkl'), train_subset)
                 module_logger.info('Train subset checkpoint saved')

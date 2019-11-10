@@ -22,8 +22,7 @@ import numpy as np
 from keras.models import Model, load_model
 from keras.layers import Input, Dense, Conv2D, Reshape, GlobalAveragePooling2D
 from keras.optimizers import SGD
-from keras.applications.mobilenet import MobileNet
-from keras.applications.mobilenet import preprocess_input as mobilenet_preprocess_input
+from keras.applications.resnet50 import ResNet50
 from keras.callbacks import ModelCheckpoint, EarlyStopping, TensorBoard
 
 from tv_net.utils.visualize import plot_training_history
@@ -83,13 +82,14 @@ class Classifier:
         callbacks = [
             TensorBoard(log_dir=self.log_dir, histogram_freq=0, write_graph=True, write_images=False),
             ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_acc', mode='auto',
-                            save_weights_only=True, save_best_only=True),
+                            save_weights_only=False, save_best_only=True),
             EarlyStopping(monitor=early_stop_metric, min_delta=early_stop_delta, patience=early_stop_patience, verbose=1,
                           mode='auto', restore_best_weights=True)
         ]
 
         # Training
-        train_steps = math.ceil(len(train_dataset.items) / batch_size)
+        train_steps = 10
+        #train_steps = math.ceil(len(train_dataset.items) / batch_size)
         val_steps = math.ceil(len(val_dataset.items) / batch_size)
 
         start_time = time.time()
@@ -120,40 +120,46 @@ class Classifier:
         ----------
         weights_path: path to the trained weights
         """
-
-        baseline_model = self._build_baseline_classifier()
+        # TODO this isn't working atm need to fix
+        baseline_model = self._build_baseline_classifier(compile=False)
         baseline_model.load_weights(weights_path, by_name=True)
 
-    def _build_baseline_classifier(self):
+    def _build_baseline_classifier(self, compile=True):
 
         """ Combines feature extractor and classification head into one model and compiles it
+
+        Parameters
+        ----------
+        compile: bool
+            whether to compile model as well
+
         Returns
         -------
         baseline_model: keras.engine.training.Model
         """
 
-        input_layer = self.feature_extractor.input
-        output_layer = self.classification_head(self.feature_extractor(input_layer))
-        baseline_model = Model(inputs=input_layer, outputs=output_layer)
+        x = self.feature_extractor.output
+        x = self.classification_head(x)
+        baseline_model = Model(self.feature_extractor.input, x)
 
-        # Compile - using default adam optimizer for now
-        optimizer = SGD(lr=self.config.BASELINE_CLF_LR,
-                        decay=self.config.BASELINE_CLF_LR_DECAY,
-                        momentum=self.config.BASELINE_CLF_MOMENTUM,
-                        nesterov=self.config.BASELINE_CLF_NESTEROV)
-        baseline_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+        if compile:
+            optimizer = SGD(lr=self.config.BASELINE_CLF_LR,
+                            decay=self.config.BASELINE_CLF_LR_DECAY,
+                            momentum=self.config.BASELINE_CLF_MOMENTUM,
+                            nesterov=self.config.BASELINE_CLF_NESTEROV)
+            baseline_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
 
-        return
+        return baseline_model
 
     def _build_feature_extractor(self):
         """
         Build keras model for feature extractor - using pre-trained mobilenet_v2 here because it is fast to train
         """
+
         image_shape = self.config.IMG_DIMS + (3,)
-        input_layer = Input(shape=image_shape)
-        feature_vector = MobileNet(include_top=False, weights='imagenet', input_shape=image_shape, pooling='avg')(input_layer)
-        feature_extractor = Model(inputs=input_layer, outputs=feature_vector)
-        return feature_extractor
+        resnet = ResNet50(weights='imagenet', include_top=False, pooling='avg', input_shape=image_shape)
+
+        return resnet
 
     def build_classification_head(self):
         """
@@ -165,7 +171,7 @@ class Classifier:
             underlying classification model to be used
         """
         input_layer = Input(shape=(self.feature_extractor.output_shape[1],))
-        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax')(input_layer)
+        softmax_layer = Dense(self.config.NUM_CLASSES, activation='softmax', init='lecun_uniform')(input_layer)
         classification_head = Model(inputs=input_layer, outputs=softmax_layer)
         return classification_head
     
@@ -259,7 +265,7 @@ class Classifier:
 
         """
         example = np.expand_dims(example, axis=0)  # add extra dimension for batch
-        preprocessed_example = mobilenet_preprocess_input(example)
+        preprocessed_example = example / 255  # normalise pixel values to [0, 1]
         return preprocessed_example
 
     def _set_log_dir(self):

@@ -15,17 +15,17 @@ class Config:
 
     NAME = 'example'
 
-    TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/train'  # directory containing weakly-labeled training data
-    VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/val'  # directory containing validation data - must be cleanly labelled!
-    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset/evaluation'
+    TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/train'  # directory containing weakly-labeled training data
+    VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/val'  # directory containing validation data - must be cleanly labelled!
+    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/evaluation'
 
     timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     OUTPUT_DIR = os.path.join('/home/ubuntu/results_store/training_value_net/experiment_01', timestamp)  # directory to store all output from algorithm
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
-    NUM_CLASSES = 3
-    CLASSES_TO_USE = ['glider', 'propeller', 'sea_plane']  # Specify subset to use - set to None to use all
-    IMG_DIMS = (128, 128)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
+    NUM_CLASSES = 7
+    CLASSES_TO_USE = None  # Specify subset to use - set to None to use all
+    IMG_DIMS = (224, 224)  # must be square image of one of the following for MobileNet [96, 128, 160, 192, 224]
 
     # General
     EVAL_BATCH_SIZE = 32
@@ -38,7 +38,7 @@ class Config:
 
     # Baseline Classifier - either trained or load a pre-trained model
     TRAIN_BASELINE_CLF = False  # If True then LOAD_BASELINE_CLF must be False (and vice-versa)
-    BASELINE_CLF_EPOCHS = 10  # set to a large number as early stopping should prevent overfitting
+    BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
     BASELINE_CLF_LR = 0.001
     BASELINE_CLF_LR_DECAY = 1e-4
@@ -49,14 +49,15 @@ class Config:
     BASELINE_EARLY_STOP_MIN_DELTA = 0.005
 
     LOAD_BASELINE_CLF = True   # If True then TRAIN_BASELINE_CLF must be False (and vice-versa)
-    BASELINE_CLF_WEIGHTS = '/home/ubuntu/results_store/training_value_net/experiment_01/2019-11-09_15-29-39/baseline_classifier_weights/best_checkpoint.h5'
+    BASELINE_CLF_WEIGHTS = '/home/ubuntu/data_store/training_value_net/aircraft_7_baseline_resnet.h5'
 
     # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 1000
     VAL_SUBSET_NUM_PER_CLASS = 100
-    MC_EPISODES = 500
+    MC_EPISODES = 50
     MC_EPOCHS = 2
     MC_LR = 0.0005
+    MC_CHECKPOINT_EVERY = 10  # number of episodes between checkpoints
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100
