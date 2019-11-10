@@ -36,23 +36,27 @@ class Config:
 
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
-    # Training baseline model
-    BASELINE_CLF_EPOCHS = 1  # set to a large number as early stopping should prevent overfitting
+    # Baseline Classifier - either trained or load a pre-trained model
+    TRAIN_BASELINE_CLF = False  # If True then LOAD_BASELINE_CLF must be False (and vice-versa)
+    BASELINE_CLF_EPOCHS = 10  # set to a large number as early stopping should prevent overfitting
     BASELINE_CLF_BATCH_SIZE = 32
     BASELINE_CLF_LR = 0.001
     BASELINE_CLF_LR_DECAY = 1e-4
     BASELINE_CLF_MOMENTUM = 0.9
     BASELINE_CLF_NESTEROV = True
-    BASELINE_EARLY_STOP_PATIENCE = 3
+    BASELINE_EARLY_STOP_PATIENCE = 1
     BASELINE_EARLY_STOP_METRIC = 'val_acc'  # which metric to use for early stopping - 'val_loss' or 'val_acc'
     BASELINE_EARLY_STOP_MIN_DELTA = 0.005
+
+    LOAD_BASELINE_CLF = True   # If True then TRAIN_BASELINE_CLF must be False (and vice-versa)
+    BASELINE_CLF_WEIGHTS = '/home/ubuntu/results_store/training_value_net/experiment_01/2019-11-09_15-29-39/baseline_classifier_weights/best_checkpoint.h5'
 
     # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 1000
     VAL_SUBSET_NUM_PER_CLASS = 100
-    MC_EPISODES = 100
-    MC_EPOCHS = 1
-    MC_LR = 0.0001
+    MC_EPISODES = 500
+    MC_EPOCHS = 2
+    MC_LR = 0.0005
 
     # Training-ValueNet architecture
     TVNET_HL1_UNITS = 100

@@ -9,7 +9,7 @@ class DataItem:
         self._feature_vector = None
         self._class_name = class_name
 
-        self.tv_point_estimates = list()  # to store point estimates of training-value from the MC estimation phase
+        self.tv_point_estimates = dict()  # maps (episode, iteration) --> point_estimate
         self.estimated_tv = None  # estimated training-value from MC estimation
         self.predicted_tv = None  # predicted training-value from Training-ValueNet
 

@@ -23,6 +23,7 @@ from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from tv_net.classifier import Classifier
 from tv_net.dataset import get_random_subset
+from tv_net.utils.common import pickle_save
 
 module_logger = logging.getLogger('main_app.TrainingValueNet')
 
@@ -92,14 +93,28 @@ class TrainingValueNet:
         val_dataset: tv_net.dataset.Dataset
             validation dataset object
         """
-        module_logger.info('Training baseline classification model')
+        module_logger.info('Training baseline classification model to use as feature extractor')
         module_logger.info('Training on {} examples'.format(train_dataset.num_examples))
         module_logger.info('Evaluating on {} examples'.format(val_dataset.num_examples))
-        self.classifier.train_baseline(train_dataset, val_dataset)
+        self.classifier.train_baseline_classifier(train_dataset, val_dataset)
+
+    def load_baseline_classifier(self, weights_path):
+        """
+        Load pre-trained baseline classifier to use as feature extractor.
+        Shape of weights MUST be the same as the keras model defined in classifier.py
+        Parameters
+        ----------
+        weights_path: str
+            path to trained baseline - should be .h5 file
+        """
+
+        module_logger.info('Loading pre-trained baseline classification model to use as feature extractor')
+        self.classifier.load_baseline_classifier(weights_path)
 
     def extract_feature_vectors(self, dataset_object):
         """
-        Extract feature vector from train baseline classifier
+        Extract feature vector from baseline classifier.
+        The feature vector is the activations of the final layer of self.classifier.feature_extractor
         Feature vectors will be store as an attribute of each data item
         Parameters
         ----------
@@ -146,7 +161,13 @@ class TrainingValueNet:
 
         start_time = time.time()
         for episode in range(self.config.MC_EPISODES):
+
             module_logger.info('Starting episode: {} of {} of the MC estimation phase'.format(episode + 1, self.config.MC_EPISODES))
+
+            if episode % 10 == 0:
+                # Pickle save train subset every 10 episodes in case instance crashes  TODO make configurable
+                pickle_save(os.path.join(self.config.OUTPUT_DIR, 'train_subset.pkl'), train_subset)
+                module_logger.info('Train subset checkpoint saved')
             
             # Re-initialize classification head weights at start of each episode 
             classification_head = self.classifier.reinitialize_classification_head(classification_head)  
@@ -175,7 +196,7 @@ class TrainingValueNet:
                 loss_improvement = val_loss_history[-1] - new_val_loss
 
                 # Update list of training-value point estimates for this example
-                item.tv_point_estimates.append(loss_improvement)
+                item.tv_point_estimates[(episode, iteration)] = loss_improvement
 
                 # Update val loss history
                 val_loss_history.append(new_val_loss)
@@ -183,7 +204,7 @@ class TrainingValueNet:
         # Now compute estimate of training-value for each example in the training subset
         # This is simply the mean immediate improvement in loss that was observed when that example was trained on
         for item in train_subset.items:
-            item.estimated_tv = np.mean(item.tv_point_estimates)
+            item.estimated_tv = np.mean(list(item.tv_point_estimates.values()))
         end_time = time.time()
         module_logger.info('MC estimation phase completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
 

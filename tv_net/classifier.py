@@ -19,7 +19,7 @@ import time
 
 import numpy as np
 
-from keras.models import Model
+from keras.models import Model, load_model
 from keras.layers import Input, Dense, Conv2D, Reshape, GlobalAveragePooling2D
 from keras.optimizers import SGD
 from keras.applications.mobilenet import MobileNet
@@ -52,7 +52,7 @@ class Classifier:
         self.classification_head_init_weights = self.classification_head.get_weights()
         self._set_log_dir()
 
-    def train_baseline(self, train_dataset, val_dataset):
+    def train_baseline_classifier(self, train_dataset, val_dataset):
         """
         Train or fine-tune the baseline classifier
         This is done in order to extract a feature-vector for each example
@@ -66,18 +66,8 @@ class Classifier:
 
         assert self.config.NUM_CLASSES == train_dataset.num_classes
         assert self.config.NUM_CLASSES == val_dataset.num_classes
-        
-        # Combine feature extractor and MLP classifier
-        input_layer = self.feature_extractor.input
-        output_layer = self.classification_head(self.feature_extractor(input_layer))
-        baseline_model = Model(inputs=input_layer, outputs=output_layer)
-        
-        # Compile - using default adam optimizer for now
-        optimizer = SGD(lr=self.config.BASELINE_CLF_LR,
-                        decay=self.config.BASELINE_CLF_LR_DECAY,
-                        momentum=self.config.BASELINE_CLF_MOMENTUM,
-                        nesterov=self.config.BASELINE_CLF_NESTEROV)
-        baseline_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+
+        baseline_model = self._build_baseline_classifier()
 
         # Train and Val batch generators
         batch_size = self.config.BASELINE_CLF_BATCH_SIZE
@@ -118,6 +108,42 @@ class Classifier:
         module_logger.info('Baseline training completed in : {}'.format(timedelta(seconds=(end_time - start_time))))
         # Visualize training
         plot_training_history(history)
+
+    def load_baseline_classifier(self, weights_path):
+        """
+        Allows you to load a pre-trained baseline classifier from a previous experiment to avoid re-training
+        each time. The baseline model joins the feature extractor and classification head that are attributes
+        of this class. This means that the feature extractor can be used once the pre-trained weights are loaded.
+
+
+        Parameters
+        ----------
+        weights_path: path to the trained weights
+        """
+
+        baseline_model = self._build_baseline_classifier()
+        baseline_model.load_weights(weights_path, by_name=True)
+
+    def _build_baseline_classifier(self):
+
+        """ Combines feature extractor and classification head into one model and compiles it
+        Returns
+        -------
+        baseline_model: keras.engine.training.Model
+        """
+
+        input_layer = self.feature_extractor.input
+        output_layer = self.classification_head(self.feature_extractor(input_layer))
+        baseline_model = Model(inputs=input_layer, outputs=output_layer)
+
+        # Compile - using default adam optimizer for now
+        optimizer = SGD(lr=self.config.BASELINE_CLF_LR,
+                        decay=self.config.BASELINE_CLF_LR_DECAY,
+                        momentum=self.config.BASELINE_CLF_MOMENTUM,
+                        nesterov=self.config.BASELINE_CLF_NESTEROV)
+        baseline_model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=['accuracy'])
+
+        return
 
     def _build_feature_extractor(self):
         """

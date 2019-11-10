@@ -31,6 +31,7 @@ if __name__ == '__main__':
     # Create output dir
     os.makedirs(config.OUTPUT_DIR)
     os.mkdir(os.path.join(config.OUTPUT_DIR, 'visualizations'))
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'config.pkl'), config)  # save config
 
     # Set up module_logger
     module_logger = initialise_logger(config.LOG_PATH)
@@ -45,8 +46,11 @@ if __name__ == '__main__':
     training_value_net = TrainingValueNet(config)
     training_value_net.build_tv_nets(train_dataset)
 
-    # Train baseline classifier
-    training_value_net.train_baseline_classifier(train_dataset, val_dataset)
+    # Train baseline classifier or Load pre-trained baseline
+    if config.TRAIN_BASELINE_CLF:
+        training_value_net.train_baseline_classifier(train_dataset, val_dataset)
+    elif config.LOAD_BASELINE_CLF:
+        training_value_net.load_baseline_classifier(config.BASELINE_CLF_WEIGHTS)
 
     # Extract feature vectors from baseline model and store them as attribute of each example
     training_value_net.extract_feature_vectors(train_dataset)
@@ -56,10 +60,13 @@ if __name__ == '__main__':
 
     # Monte-Carlo Estimation Phase
     train_subset = training_value_net.mc_estimation_phase(train_dataset, val_dataset)
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'train_subset.pkl'), train_subset)
+
     # Training each Training-ValueNet on the estimates from the MC estimation phase
     training_value_net.train_tv_nets(train_subset)
 
     # Predict training-value for ALL training examples using trained Training-ValueNets
+    module_logger.info('Predicting training-values for all examples...')
     training_value_net.predict_training_values(train_dataset)
     if config.PRODUCE_TV_HISTOGRAM:
         produce_tv_histograms(train_dataset)

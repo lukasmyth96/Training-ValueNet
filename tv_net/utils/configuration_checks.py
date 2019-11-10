@@ -43,3 +43,11 @@ def check_configuration(config):
             raise ValueError('Config Error: classes found do not match \n'
                              'train classes found: {} \n'
                              'val classes found: {}'.format(train_classes_found, val_classes_found))
+
+     # Check that EITHER TRAIN_BASELINE_CLF or LOAD_BASELINE_CLF is set to True (not both)
+    if config.TRAIN_BASELINE_CLF and config.LOAD_BASELINE_CLF:
+        raise ValueError('Config Error: TRAIN_BASELINE_CLF and LOAD_BASELINE_CLF cannot both be True.')
+    elif not config.TRAIN_BASELINE_CLF and not config.LOAD_BASELINE_CLF:
+        raise ValueError('Config Error: TRAIN_BASELINE_CLF and LOAD_BASELINE_CLF cannot both be False.')
+    # TODO add more checks here
+
