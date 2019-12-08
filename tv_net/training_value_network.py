@@ -231,7 +231,7 @@ class TrainingValueNet:
             targets_array = np.array(targets)
 
             # Set up callbacks
-            checkpoint_path = os.path.join(self.log_dir, 'tvnet_{}'.format(class_name))
+            checkpoint_path = os.path.join(self.log_dir, 'tvnet_{}.h5'.format(class_name))
             callbacks = [
                 ModelCheckpoint(checkpoint_path, verbose=1, monitor='val_loss', mode='auto',
                                 save_weights_only=True, save_best_only=True),
