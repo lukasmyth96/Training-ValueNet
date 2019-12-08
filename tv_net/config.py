@@ -15,11 +15,10 @@ class Config:
 
     NAME = 'example'
 
-    TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/train'  # directory containing weakly-labeled training data
-    VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/val'  # directory containing validation data - must be cleanly labelled!
-    EVALUATION_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_128/evaluation'
+    TRAIN_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_224/train'  # directory containing weakly-labeled training data
+    VAL_DATASET_DIR = '/home/ubuntu/data_store/training_value_net/aircraft_7_dataset_224/val'  # directory containing validation data - must be cleanly labelled!
 
-    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    timestamp = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     OUTPUT_DIR = os.path.join('/home/ubuntu/results_store/training_value_net/experiment_01', timestamp)  # directory to store all output from algorithm
     LOG_PATH = os.path.join(OUTPUT_DIR, 'logs.log')
 
@@ -32,7 +31,7 @@ class Config:
 
     # Visualizations
     PRODUCE_TSNE = True  # If True a TSNE visualization will be produced of the feature vectors after baseline training
-    TSNE_NUM_EXAMPLES = 3000  # Number of examples to include in T-SNE (to keep run-time reasonable)
+    TSNE_NUM_EXAMPLES = 7000  # Number of examples to include in T-SNE (to keep run-time reasonable)
 
     PRODUCE_TV_HISTOGRAM = True  # If True a histogram will be made showing distribution of predicted tvs for each class
 
@@ -54,9 +53,9 @@ class Config:
     # Monte-Carlo estimation phase
     TRAIN_SUBSET_NUM_PER_CLASS = 1000
     VAL_SUBSET_NUM_PER_CLASS = 100
-    MC_EPISODES = 50
-    MC_EPOCHS = 2
-    MC_LR = 0.0005
+    MC_EPISODES = 100
+    MC_EPOCHS = 1
+    MC_LR = 0.001
     MC_CHECKPOINT_EVERY = 10  # number of episodes between checkpoints
 
     # Training-ValueNet architecture

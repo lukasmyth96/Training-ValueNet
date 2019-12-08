@@ -12,15 +12,15 @@ setup(
     license='MIT',
     description='A tool for performing automated label cleaning on weakly-supervised classification data',
     packages=['tv_net'],
-    install_requires=['tqdm', 'keras', 'scikit-image']
+    install_requires=['keras', 'tqdm', 'yellowbrick']
     , dependency_links=[
                         ],
     include_package_data=True,
-    python_requires='>=3.4',
+    python_requires='>=3.0',
     long_description='''Training-ValueNet is a tool that allows users to perform label cleaning on weakly-supervised 
                         data for any classification task. ''',
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Intended Audience :: Developers',
         'Natural Language :: English',

@@ -54,7 +54,9 @@ if __name__ == '__main__':
 
     # Extract feature vectors from baseline model and store them as attribute of each example
     training_value_net.extract_feature_vectors(train_dataset)
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
     training_value_net.extract_feature_vectors(val_dataset)
+    pickle_save(os.path.join(config.OUTPUT_DIR, 'val_dataset.pkl'), val_dataset)
     if config.PRODUCE_TSNE:
         tsne_visualization(train_dataset, num_examples=config.TSNE_NUM_EXAMPLES)
 
@@ -91,13 +93,6 @@ if __name__ == '__main__':
             dest = os.path.join(dirty_dir, item.class_name, new_filename) 
 
         shutil.copy(item.filepath, dest)
-
-    # Evaluate detections
-    precision, recall, eval_df = evaluate_cleaning_performance(config.EVALUATION_DIR, train_dataset)
-    eval_df.to_excel(os.path.join(config.OUTPUT_DIR, 'evaluation_df.xlsx'))
-    module_logger.info('Final Results: \n '
-                       'Precision: {} \n'
-                       'Recall: {}'.format(precision, recall))
 
     #  For now just save the objects
     pickle_save(os.path.join(config.OUTPUT_DIR, 'train_dataset.pkl'), train_dataset)
