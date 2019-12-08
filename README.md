@@ -11,7 +11,7 @@ classification performance.
 
 -  Training-ValueNet solves this problem by automatically identifying and removing mislabeled examples from your dataset.
 
-![Alt text](img/training_value_examples.jpg?raw=true "Optional Title")
+![Alt text](img/training_value_examples.jpg?raw=true "Training-ValueNet identifies and removes mislabeled training examples by first estimating the net impact of each example on the classifiers final performance. We call this the training-value. Examples with a negative training-value are discarded from the dataset. ")
 
 Table of Contents
 =================
