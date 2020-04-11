@@ -11,6 +11,8 @@ classification performance.
 
 -  Training-ValueNet solves this problem by automatically identifying and removing mislabeled examples from your dataset.
 
+For full detail read our ICDL 2019 conference paper [here](http://empslocal.ex.ac.uk/people/staff/np331/publications/SmythEtAl2019.pdf)
+
 ![Alt text](img/training_value_examples.jpg?raw=true "Every training example offers some unique amount of value to the learning process. Mislabeled training examples are likely to hurt classification performance and will therefore possess a negative value. Training-ValueNet identifies and removes mislabeled images from a dataset by learning to estimate the value each example offers. ")
 
 Table of Contents
